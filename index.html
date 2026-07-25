@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>週間献立プランナー</title>
+<style>
+  :root{
+    --bg:#f7f6f2; --card:#ffffff; --ink:#2b2b2b; --sub:#7a766e;
+    --line:#e7e3da; --accent:#4a8c6f; --accent-d:#3a7058;
+    --kid:#e8814a; --warn:#c8602f; --chip:#eef2ee; --chipk:#fbeee4;
+    --shadow:0 1px 3px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.04);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,"Hiragino Sans","Yu Gothic",sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:920px;margin:0 auto;padding:24px 16px 64px}
+  header h1{font-size:24px;margin:0 0 4px;letter-spacing:.02em}
+  header p{margin:0 0 20px;color:var(--sub);font-size:13px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:20px;margin-bottom:18px;box-shadow:var(--shadow)}
+  .card h2{font-size:15px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+  .card .hint{font-size:12px;color:var(--sub);margin:0 0 12px}
+  .kidnote{font-size:12px;color:var(--accent-d);background:var(--chipk);border:1px solid #f2cdb4;
+    padding:10px 12px;border-radius:8px;margin:14px 0 0;line-height:1.5}
+  .badge{font-size:11px;background:var(--chip);color:var(--accent-d);
+    padding:2px 8px;border-radius:20px;font-weight:600}
+  .badge.once{background:#eef0f6;color:#5566aa}
+  label.fld{display:block;font-size:13px;font-weight:600;margin:14px 0 6px}
+  textarea,input[type=text]{width:100%;border:1px solid var(--line);border-radius:10px;
+    padding:10px 12px;font-size:14px;font-family:inherit;background:#fcfcfb;resize:vertical}
+  textarea:focus,input:focus{outline:none;border-color:var(--accent)}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .row>div{flex:1;min-width:220px}
+  .btn{appearance:none;border:none;border-radius:10px;padding:13px 22px;font-size:15px;
+    font-weight:700;cursor:pointer;font-family:inherit;transition:.15s}
+  .btn-main{background:var(--accent);color:#fff;width:100%}
+  .btn-main:hover{background:var(--accent-d)}
+  .btn-ghost{background:transparent;color:var(--accent-d);border:1px solid var(--line);font-size:13px;padding:8px 14px;font-weight:600}
+  .btn-ghost:hover{background:var(--chip)}
+  .pantry-box{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;background:#fafdfb;
+    border:1px solid var(--line);border-radius:10px;padding:12px}
+  .pantry-box .pt{font-size:12px;background:var(--chip);color:var(--accent-d);
+    padding:4px 6px 4px 10px;border-radius:20px;font-weight:600;display:inline-flex;align-items:center;gap:3px}
+  .pantry-box .pt.user{background:#eef0f6;color:#5566aa}
+  .pt-x{border:none;background:transparent;color:inherit;cursor:pointer;font-size:14px;line-height:1;
+    opacity:.45;padding:0 2px;font-family:inherit;border-radius:50%}
+  .pt-x:hover{opacity:1;color:var(--warn)}
+  #pantryNote a:hover{opacity:.8}
+  .seg{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+  .seg button{flex:1;min-width:120px;font-family:inherit;font-size:12.5px;font-weight:600;
+    padding:9px 8px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--sub);
+    cursor:pointer;transition:.12s;white-space:nowrap}
+  .seg button:hover{border-color:var(--accent)}
+  .seg button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .chip{font-size:12px;background:var(--chip);padding:4px 10px;border-radius:20px;cursor:pointer;border:1px solid transparent}
+  .chip:hover{border-color:var(--accent)}
+  /* output */
+  #out{display:none}
+  .day{border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden;background:var(--card);box-shadow:var(--shadow)}
+  .day-h{display:flex;align-items:center;gap:10px;padding:12px 16px;background:#fbfaf7;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .day-reroll{font-size:11px;color:var(--accent-d);background:transparent;border:1px solid var(--line);
+    border-radius:8px;padding:3px 9px;cursor:pointer;font-family:inherit;font-weight:600;white-space:nowrap}
+  .day-reroll:hover{background:var(--chip);border-color:var(--accent)}
+  .day-reroll:active{transform:scale(.96)}
+  .day-h .dow{font-weight:800;font-size:16px}
+  .day-h .who{font-size:11px;color:var(--sub);background:#fff;border:1px solid var(--line);padding:2px 8px;border-radius:20px}
+  .day-h .who.kid{color:var(--kid);border-color:#f2cdb4;background:var(--chipk)}
+  .day-h .time{margin-left:auto;font-size:12px;color:var(--sub)}
+  .day.rest .day-h{background:#f2f1ec}
+  .dishes{padding:6px 16px 14px}
+  .dish{padding:10px 0;border-bottom:1px dashed var(--line)}
+  .dish:last-child{border-bottom:none}
+  .dish .role{font-size:10px;font-weight:700;letter-spacing:.05em;color:#fff;background:var(--accent);
+    padding:2px 7px;border-radius:5px;margin-right:8px;vertical-align:1px}
+  .dish .role.sub{background:#9bb3a5}
+  .dish .name{font-weight:700;font-size:15px}
+  a.name{color:inherit;text-decoration:none;cursor:pointer;
+    border-bottom:1px dotted var(--line);transition:.12s}
+  a.name:hover{color:var(--accent-d);border-bottom-color:var(--accent)}
+  a.name::after{content:"↗";font-size:10px;color:var(--sub);margin-left:3px;vertical-align:2px}
+  .dish .meta{font-size:12px;color:var(--sub);margin:4px 0 0 0}
+  .dish .tag{display:inline-block;font-size:10px;background:var(--chip);color:var(--accent-d);padding:1px 7px;border-radius:12px;margin:0 4px 0 0}
+  .dish .tag.fresh{background:#fbe9e2;color:var(--warn)}
+  .dish .tag.use{background:#e4f0ea;color:var(--accent-d)}
+  .rest-note{padding:16px;color:var(--sub);font-size:13px}
+  .shop h2{font-size:16px;margin:0 0 12px}
+  .shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px 18px}
+  .shop-cat{font-size:12px;font-weight:800;color:var(--accent-d);margin:10px 0 4px;grid-column:1/-1;border-bottom:1px solid var(--line);padding-bottom:3px}
+  .shop-item{font-size:13px;display:flex;align-items:center;gap:7px}
+  .shop-item input{width:16px;height:16px;accent-color:var(--accent)}
+  .have-note{font-size:12px;color:var(--sub);margin-top:14px;background:var(--chip);padding:10px 12px;border-radius:8px}
+  .toolbar{display:flex;gap:8px;margin:0 0 16px;flex-wrap:wrap}
+  .nutri{font-size:11px;color:var(--sub);margin-top:8px}
+  .footnote{font-size:11px;color:var(--sub);text-align:center;margin-top:28px}
+  details.rules{margin-top:8px}
+  details.rules summary{cursor:pointer;font-size:12px;color:var(--accent-d);font-weight:600}
+  details.rules ul{font-size:12px;color:var(--sub);margin:8px 0 0;padding-left:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🍳 週間献立プランナー</h1>
+    <p>週末まとめ買い前提。月・木はお休み、土日は子供向け（日曜は昼も子供向け）。冷蔵庫の食材を優先して使い切ります。</p>
+  </header>
+
+  <!-- 入力（初回1回） -->
+  <div class="card" id="setupCard">
+    <h2>初回設定 <span class="badge once">最初に1回</span></h2>
+    <p class="hint">一度入力すれば、このページを開いている間は保持されます（変更も可）。</p>
+
+    <label class="fld">登録済みの基本調味料 <span style="font-weight:400;color:var(--sub);font-size:11px">（在庫扱い／買い物リストに出ません。× で削除できます）</span></label>
+    <div class="pantry-box" id="pantryView"></div>
+    <div id="pantryNote" style="margin-top:8px;font-size:11px"></div>
+
+    <label class="fld" style="margin-top:16px">追加で持っている調味料（任意）</label>
+    <p class="hint" style="margin:4px 0 0">上の基本セットに無いものを足したいとき入力。これも在庫扱いになります。</p>
+    <textarea id="seasonings" rows="2" placeholder="例：オイスターソース, めんつゆ, カレー粉, バルサミコ酢"></textarea>
+    <div class="chips" id="seasonChips"></div>
+
+    <p class="kidnote">👨‍👩‍👧‍👦 土日の子供向け献立は、登録済みの好みメニュー（フライドポテト／ラーメン／うどん／手巻き寿司／カレー／チキンステーキ／麻婆豆腐／ステーキ／ちくわの磯辺揚げ／焼肉／焼鮭 など）を参考に自動で組みます。</p>
+  </div>
+
+  <!-- 入力（毎週） -->
+  <div class="card">
+    <h2>今週の冷蔵庫の食材 <span class="badge">毎週入力</span></h2>
+    <p class="hint">ある食材をカンマ区切りで。これを優先的に使い切る献立を組みます。生もの・足の早いものは週の前半（火・水）に回します。</p>
+    <textarea id="fridge" rows="2" placeholder="例：鶏むね肉, 豚こま, 鮭, ほうれん草, キャベツ, 玉ねぎ, にんじん, 卵, 豆腐, きのこ, トマト"></textarea>
+    <div class="chips" id="fridgeChips"></div>
+    <label class="fld" style="margin-top:14px">提案のスタイル <span style="font-weight:400;color:var(--sub);font-size:11px">（バリエーションと冷蔵庫使い切りのバランス）</span></label>
+    <div class="seg" id="varietySeg">
+      <button data-v="variety" onclick="setVariety('variety')">🎲 バリエーション重視</button>
+      <button data-v="balance" class="on" onclick="setVariety('balance')">⚖️ バランス</button>
+      <button data-v="fridge" onclick="setVariety('fridge')">🧊 冷蔵庫を使い切る</button>
+    </div>
+    <button class="btn btn-main" style="margin-top:18px" onclick="generate()">献立を作成する</button>
+  </div>
+
+  <!-- 出力 -->
+  <div id="out">
+    <div class="toolbar">
+      <button class="btn btn-ghost" onclick="generate()">🔄 別の案を出す</button>
+      <button class="btn btn-ghost" id="copyBtn" onclick="copyMenu(this)">📋 クリップボードにコピー</button>
+    </div>
+    <div id="menu"></div>
+    <div class="card shop">
+      <h2>🛒 週末の買い物リスト</h2>
+      <div class="shop-grid" id="shop"></div>
+      <div class="have-note" id="haveNote"></div>
+    </div>
+    <details class="rules">
+      <summary>この献立が守っているルール</summary>
+      <ul>
+        <li>月・木は調理なし。火水＝夫婦2人、土日＝子供2人追加で子供向け。</li>
+        <li>主菜1＋副菜1〜2。全工程おおむね1時間以内・コンロ2口で完結。</li>
+        <li>生もの・足の早いもの（魚・ひき肉など）は火・水に優先配置。</li>
+        <li>特殊な調味料は使わず、カツ系は除外。</li>
+        <li>冷蔵庫にある食材を週全体でできるだけ使い切るよう配分し、不足分のみ買い物リスト化。使い残しは買い物リスト下に表示。</li>
+        <li>各日の「🔄 この日を変更」で、その日だけ主菜を組み直せます（他の日は固定）。</li>
+      </ul>
+    </details>
+    <p class="footnote">献立は内蔵レシピから条件に合わせて自動生成。アレルギー等は各自ご確認ください。</p>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   レシピDB
+   role: main(主菜) / sub(副菜)
+   time: 1品あたりの目安(分)
+   fresh: true=生もの/足が早い → 週前半(火水)に優先
+   kidOK: 子供向けに出せるか
+   burners: 同時に占有するコンロ口数(0=火を使わない/和え物など)
+   ing: 主要食材(買い物判定に使う) [{name, cat}]
+   seas: 必要な調味料(基本調味料のみ)
+   tags: 栄養カテゴリ等の表示用
+   ============================================================ */
+const PANTRY = ["醤油","みりん","酒","味噌","砂糖","塩","こしょう","胡椒","サラダ油","油","ごま油","酢","顆粒だし","だし","マヨネーズ","ケチャップ","ポン酢","片栗粉","小麦粉","にんにく","にんにくチューブ","しょうが","生姜","鶏がらスープ","コンソメ","すりごま","バター","青のり","コチュジャン","豆板醤","めんつゆ","中濃ソース"];
+
+const CAT = {veg:"野菜",meat:"肉",fish:"魚介",egg:"卵・大豆",dairy:"乳製品",other:"その他",carb:"主食"};
+
+/* genre: 和/洋/中  kidMain: 子供日に主菜として出せるか(肉or魚メインで野菜主体でない) */
+const MAINS = [
+  // ---- 和 ----
+  {id:"teriyaki_chicken",name:"鶏もも照り焼き",genre:"和",time:25,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"鶏もも肉",c:"meat"}],seas:["醤油","みりん","酒","砂糖"],tags:["たんぱく質"]},
+  {id:"buta_shogayaki",name:"豚の生姜焼き",genre:"和",time:20,fresh:false,kidMain:false,burners:1,
+    ing:[{n:"豚ロース",c:"meat"},{n:"玉ねぎ",c:"veg"}],seas:["醤油","みりん","酒","しょうが"],tags:["たんぱく質","野菜"]},
+  {id:"nikujaga",name:"肉じゃが",genre:"和",time:35,fresh:false,kidMain:false,burners:1,
+    ing:[{n:"豚こま肉",c:"meat"},{n:"じゃがいも",c:"veg"},{n:"玉ねぎ",c:"veg"},{n:"にんじん",c:"veg"}],seas:["醤油","みりん","酒","砂糖","だし"],tags:["野菜","たんぱく質"]},
+  {id:"sake_munie",name:"鮭の照り焼き",genre:"和",time:20,fresh:true,kidMain:true,burners:1,
+    ing:[{n:"鮭",c:"fish"}],seas:["醤油","みりん","酒","砂糖"],tags:["魚","たんぱく質"]},
+  {id:"buri_teri",name:"ぶりの照り焼き",genre:"和",time:20,fresh:true,kidMain:true,burners:1,
+    ing:[{n:"ぶり",c:"fish"}],seas:["醤油","みりん","酒","砂糖"],tags:["魚","たんぱく質"]},
+  {id:"saba_miso",name:"さばの味噌煮",genre:"和",time:30,fresh:true,kidMain:true,burners:1,
+    ing:[{n:"さば",c:"fish"},{n:"しょうが",c:"veg"}],seas:["味噌","醤油","みりん","砂糖","酒"],tags:["魚","たんぱく質"]},
+  {id:"chicken_karaage",name:"鶏の唐揚げ",genre:"和",time:30,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"鶏もも肉",c:"meat"}],seas:["醤油","酒","しょうが","片栗粉"],tags:["たんぱく質"]},
+  {id:"buri_daikon",name:"ぶり大根",genre:"和",time:40,fresh:true,kidMain:false,burners:1,
+    ing:[{n:"ぶり",c:"fish"},{n:"大根",c:"veg"}],seas:["醤油","みりん","酒","砂糖","だし"],tags:["魚","野菜"]},
+  {id:"chicken_oroshi",name:"鶏もものおろしポン酢",genre:"和",time:25,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"鶏もも肉",c:"meat"},{n:"大根",c:"veg"}],seas:["ポン酢","片栗粉"],tags:["たんぱく質"]},
+  {id:"buta_shabu",name:"豚しゃぶのごまだれ",genre:"和",time:20,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"豚しゃぶ肉",c:"meat"}],seas:["醤油","酢","砂糖","すりごま","ごま油"],tags:["たんぱく質"]},
+  {id:"sake_nanban",name:"鮭の南蛮漬け風",genre:"和",time:30,fresh:true,kidMain:true,burners:1,
+    ing:[{n:"鮭",c:"fish"},{n:"玉ねぎ",c:"veg"}],seas:["醤油","酢","砂糖","片栗粉"],tags:["魚","たんぱく質"]},
+  {id:"tsukune",name:"鶏つくねの照り焼き",genre:"和",time:30,fresh:true,freezeOK:true,kidMain:true,burners:1,
+    ing:[{n:"鶏ひき肉",c:"meat"},{n:"長ねぎ",c:"veg"}],seas:["醤油","みりん","酒","砂糖","片栗粉"],tags:["たんぱく質"]},
+  {id:"sawara_saikyo",name:"さわらの照り焼き",genre:"和",time:25,fresh:true,kidMain:true,burners:1,
+    ing:[{n:"さわら",c:"fish"}],seas:["醤油","みりん","酒","砂糖"],tags:["魚","たんぱく質"]},
+  // ---- 洋 ----
+  {id:"hamburg",name:"煮込みハンバーグ",genre:"洋",time:35,fresh:true,freezeOK:true,kidMain:true,burners:1,
+    ing:[{n:"合いびき肉",c:"meat"},{n:"玉ねぎ",c:"veg"},{n:"卵",c:"egg"}],seas:["ケチャップ","醤油","小麦粉","こしょう"],tags:["たんぱく質"]},
+  {id:"meatball",name:"鶏ひきのトマトミートボール",genre:"洋",time:30,fresh:true,freezeOK:true,kidMain:true,burners:1,
+    ing:[{n:"鶏ひき肉",c:"meat"},{n:"トマト缶",c:"other"}],seas:["ケチャップ","砂糖","片栗粉","こしょう"],tags:["たんぱく質"]},
+  {id:"sake_munie_b",name:"鮭のムニエル",genre:"洋",time:20,fresh:true,kidMain:true,burners:1,
+    ing:[{n:"鮭",c:"fish"}],seas:["小麦粉","塩","こしょう","醤油"],tags:["魚","たんぱく質"]},
+  {id:"chicken_tomato",name:"鶏むねのトマト煮",genre:"洋",time:30,fresh:false,kidMain:false,burners:1,
+    ing:[{n:"鶏むね肉",c:"meat"},{n:"トマト缶",c:"other"},{n:"玉ねぎ",c:"veg"}],seas:["塩","こしょう","にんにく"],tags:["たんぱく質","野菜"]},
+  {id:"chicken_picata",name:"鶏むねのピカタ",genre:"洋",time:25,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"鶏むね肉",c:"meat"},{n:"卵",c:"egg"}],seas:["小麦粉","塩","こしょう","ケチャップ"],tags:["たんぱく質"]},
+  {id:"buta_piccata",name:"白身魚のソテー",genre:"洋",time:20,fresh:true,kidMain:true,burners:1,
+    ing:[{n:"白身魚",c:"fish"}],seas:["小麦粉","塩","こしょう"],tags:["魚","たんぱく質"]},
+  {id:"curry",name:"ポークカレー",genre:"洋",time:40,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"豚こま肉",c:"meat"},{n:"じゃがいも",c:"veg"},{n:"にんじん",c:"veg"},{n:"玉ねぎ",c:"veg"},{n:"カレールウ",c:"other"}],seas:[],tags:["たんぱく質","主食"]},
+  {id:"chicken_cream",name:"鶏もものクリーム煮",genre:"洋",time:30,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"鶏もも肉",c:"meat"},{n:"玉ねぎ",c:"veg"},{n:"牛乳",c:"dairy"}],seas:["小麦粉","コンソメ","塩","こしょう"],tags:["たんぱく質"]},
+  {id:"omurice",name:"とろ卵オムライス",genre:"洋",time:30,fresh:false,kidMain:true,burners:2,
+    ing:[{n:"卵",c:"egg"},{n:"鶏もも肉",c:"meat"},{n:"玉ねぎ",c:"veg"},{n:"ごはん",c:"carb"}],seas:["ケチャップ","塩","こしょう"],tags:["たんぱく質","主食"]},
+  {id:"meat_sauce",name:"ミートソースペンネ",genre:"洋",time:30,fresh:true,freezeOK:true,kidMain:true,burners:2,
+    ing:[{n:"合いびき肉",c:"meat"},{n:"玉ねぎ",c:"veg"},{n:"トマト缶",c:"other"},{n:"ペンネ",c:"carb"}],seas:["ケチャップ","コンソメ","にんにく"],tags:["たんぱく質","主食"]},
+  {id:"sake_chanchan",name:"鮭のちゃんちゃん焼き風",genre:"洋",time:30,fresh:true,kidMain:true,burners:1,
+    ing:[{n:"鮭",c:"fish"},{n:"キャベツ",c:"veg"}],seas:["味噌","バター","砂糖"],tags:["魚","たんぱく質"]},
+  {id:"chicken_herb",name:"鶏むねのハーブソテー",genre:"洋",time:25,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"鶏むね肉",c:"meat"}],seas:["塩","こしょう","にんにく","小麦粉"],tags:["たんぱく質"]},
+  // ---- 中 ----
+  {id:"mabo",name:"麻婆豆腐(甘口)",genre:"中",time:25,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"豚ひき肉",c:"meat"},{n:"豆腐",c:"egg"},{n:"長ねぎ",c:"veg"}],seas:["味噌","醤油","片栗粉","しょうが"],tags:["たんぱく質","大豆"]},
+  {id:"gyoza_yaki",name:"焼き餃子",genre:"中",time:30,fresh:true,freezeOK:true,kidMain:true,burners:1,
+    ing:[{n:"豚ひき肉",c:"meat"},{n:"キャベツ",c:"veg"},{n:"にら",c:"veg"},{n:"餃子の皮",c:"other"}],seas:["醤油","ごま油","しょうが"],tags:["たんぱく質"]},
+  {id:"ebi_chili_mild",name:"えびのケチャップ炒め",genre:"中",time:25,fresh:true,kidMain:true,burners:1,
+    ing:[{n:"えび",c:"fish"},{n:"玉ねぎ",c:"veg"}],seas:["ケチャップ","片栗粉","しょうが","砂糖"],tags:["魚介","たんぱく質"]},
+  {id:"yurinchi",name:"鶏もものねぎだれ焼き",genre:"中",time:25,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"鶏もも肉",c:"meat"},{n:"長ねぎ",c:"veg"}],seas:["醤油","酢","砂糖","ごま油"],tags:["たんぱく質"]},
+  {id:"hoikoro",name:"豚こまとキャベツの味噌炒め",genre:"中",time:25,fresh:false,kidMain:false,burners:1,
+    ing:[{n:"豚こま肉",c:"meat"},{n:"キャベツ",c:"veg"}],seas:["味噌","醤油","砂糖","ごま油"],tags:["たんぱく質","野菜"]},
+  {id:"buri_chili",name:"ぶりの甘酢あんかけ",genre:"中",time:30,fresh:true,kidMain:true,burners:1,
+    ing:[{n:"ぶり",c:"fish"}],seas:["ケチャップ","酢","砂糖","片栗粉"],tags:["魚","たんぱく質"]},
+  {id:"chuka_karaage",name:"鶏むねの油淋鶏風",genre:"中",time:30,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"鶏むね肉",c:"meat"},{n:"長ねぎ",c:"veg"}],seas:["醤油","酢","砂糖","片栗粉","ごま油"],tags:["たんぱく質"]},
+  {id:"subuta_kid",name:"鶏もものケチャップ酢豚風",genre:"中",time:30,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"鶏もも肉",c:"meat"},{n:"玉ねぎ",c:"veg"},{n:"ピーマン",c:"veg"}],seas:["ケチャップ","酢","砂糖","片栗粉"],tags:["たんぱく質"]},
+  {id:"chinjao",name:"豚こまのチンジャオ風",genre:"中",time:25,fresh:false,kidMain:false,burners:1,
+    ing:[{n:"豚こま肉",c:"meat"},{n:"ピーマン",c:"veg"},{n:"たけのこ水煮",c:"veg"}],seas:["醤油","酒","砂糖","片栗粉","ごま油"],tags:["たんぱく質","野菜"]},
+  {id:"oroshi_ankake",name:"鮭の中華あんかけ",genre:"中",time:30,fresh:true,kidMain:true,burners:1,
+    ing:[{n:"鮭",c:"fish"},{n:"長ねぎ",c:"veg"}],seas:["鶏がらスープ","醤油","酢","砂糖","片栗粉"],tags:["魚","たんぱく質"]},
+  {id:"ebimayo",name:"えびマヨ",genre:"中",time:25,fresh:true,kidMain:true,burners:1,
+    ing:[{n:"えび",c:"fish"}],seas:["マヨネーズ","ケチャップ","砂糖","片栗粉"],tags:["魚介","たんぱく質"]},
+  {id:"niratama",name:"豚ひきとニラの卵炒め",genre:"中",time:20,fresh:true,freezeOK:true,kidMain:true,burners:1,
+    ing:[{n:"豚ひき肉",c:"meat"},{n:"にら",c:"veg"},{n:"卵",c:"egg"}],seas:["鶏がらスープ","醤油","ごま油"],tags:["たんぱく質"]},
+  {id:"torisoboro",name:"鶏そぼろあんかけ豆腐",genre:"中",time:20,fresh:true,freezeOK:true,kidMain:true,burners:1,
+    ing:[{n:"鶏ひき肉",c:"meat"},{n:"豆腐",c:"egg"},{n:"長ねぎ",c:"veg"}],seas:["醤油","砂糖","片栗粉","しょうが"],tags:["たんぱく質","大豆"]},
+  // ---- 子供の好み登録メニュー由来の主菜（焼肉・ステーキ・焼鮭 等） ----
+  {id:"chicken_steak",name:"チキンステーキ",genre:"洋",time:25,fresh:false,kidMain:true,kidFave:true,burners:1,
+    ing:[{n:"鶏もも肉",c:"meat"}],seas:["塩","こしょう","にんにく","醤油","バター"],tags:["たんぱく質"]},
+  {id:"beef_steak",name:"ステーキ",genre:"洋",time:20,fresh:false,kidMain:true,kidFave:true,burners:1,
+    ing:[{n:"牛ステーキ肉",c:"meat"}],seas:["塩","こしょう","にんにく","醤油","バター"],tags:["たんぱく質"]},
+  {id:"yakiniku",name:"牛焼肉",genre:"和",time:20,fresh:false,kidMain:true,kidFave:true,burners:1,
+    ing:[{n:"牛焼肉用肉",c:"meat"},{n:"玉ねぎ",c:"veg"}],seas:["醤油","砂糖","にんにく","ごま油","すりごま"],tags:["たんぱく質"]},
+  {id:"yakizake",name:"焼き鮭",genre:"和",time:15,fresh:true,kidMain:true,kidFave:true,burners:1,
+    ing:[{n:"鮭",c:"fish"}],seas:["塩"],tags:["魚","たんぱく質"]},
+  // ---- 一品完結の特別主菜（土日のみ・副菜は軽め1品 or なし） ----
+  {id:"ramen",name:"ラーメン（具だくさん）",genre:"中",time:25,fresh:false,kidMain:true,kidFave:true,oneDish:true,burners:2,
+    ing:[{n:"中華麺",c:"carb"},{n:"豚チャーシュー",c:"meat"},{n:"卵",c:"egg"},{n:"もやし",c:"veg"},{n:"長ねぎ",c:"veg"}],seas:["鶏がらスープ","醤油","ごま油"],tags:["たんぱく質","主食"]},
+  {id:"udon",name:"肉うどん",genre:"和",time:20,fresh:false,kidMain:true,kidFave:true,oneDish:true,burners:1,
+    ing:[{n:"うどん",c:"carb"},{n:"豚こま肉",c:"meat"},{n:"長ねぎ",c:"veg"}],seas:["醤油","みりん","だし","砂糖"],tags:["たんぱく質","主食"]},
+  {id:"temaki",name:"手巻き寿司",genre:"和",time:30,fresh:false,kidMain:true,kidFave:true,oneDish:true,burners:1,
+    ing:[{n:"ごはん",c:"carb"},{n:"卵",c:"egg"},{n:"ツナ缶",c:"other"},{n:"カニカマ",c:"fish"},{n:"きゅうり",c:"veg"},{n:"焼きのり",c:"other"},{n:"ハム",c:"meat"}],seas:["酢","砂糖","塩"],tags:["たんぱく質","主食"]},
+  // ---- 追加：和 ----
+  {id:"tori_daikon_ni",name:"鶏と大根の煮物",genre:"和",time:35,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"鶏もも肉",c:"meat"},{n:"大根",c:"veg"}],seas:["醤油","みりん","酒","砂糖","だし"],tags:["たんぱく質","野菜"]},
+  {id:"buta_bara_daikon",name:"豚バラ大根",genre:"和",time:35,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"豚バラ肉",c:"meat"},{n:"大根",c:"veg"}],seas:["醤油","みりん","酒","砂糖","だし"],tags:["たんぱく質","野菜"]},
+  {id:"buri_shioyaki",name:"ぶりの塩焼き",genre:"和",time:15,fresh:true,kidMain:true,burners:1,
+    ing:[{n:"ぶり",c:"fish"}],seas:["塩"],tags:["魚","たんぱく質"]},
+  {id:"munetori_teri",name:"鶏むねの照り焼き",genre:"和",time:25,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"鶏むね肉",c:"meat"}],seas:["醤油","みりん","酒","砂糖","片栗粉"],tags:["たんぱく質"]},
+  {id:"saba_shioyaki",name:"さばの塩焼き",genre:"和",time:15,fresh:true,kidMain:true,burners:1,
+    ing:[{n:"さば",c:"fish"}],seas:["塩"],tags:["魚","たんぱく質"]},
+  {id:"buta_atsuage",name:"豚肉と厚揚げの甘辛炒め",genre:"和",time:20,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"豚こま肉",c:"meat"},{n:"厚揚げ",c:"egg"},{n:"長ねぎ",c:"veg"}],seas:["醤油","みりん","砂糖"],tags:["たんぱく質","大豆"]},
+  {id:"mune_mizore",name:"鶏むねのみぞれ煮",genre:"和",time:25,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"鶏むね肉",c:"meat"},{n:"大根",c:"veg"}],seas:["醤油","みりん","酒","片栗粉"],tags:["たんぱく質"]},
+  // ---- 追加：洋 ----
+  {id:"chicken_cheese",name:"鶏もものトマトチーズ焼き",genre:"洋",time:30,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"鶏もも肉",c:"meat"},{n:"トマト缶",c:"other"},{n:"ピザ用チーズ",c:"dairy"}],seas:["塩","こしょう","にんにく"],tags:["たんぱく質"]},
+  {id:"sake_hoil",name:"鮭ときのこのホイル焼き",genre:"洋",time:25,fresh:true,kidMain:true,burners:1,
+    ing:[{n:"鮭",c:"fish"},{n:"きのこ",c:"veg"},{n:"玉ねぎ",c:"veg"}],seas:["バター","醤油","塩","こしょう"],tags:["魚","たんぱく質"]},
+  {id:"pork_sote",name:"ポークソテー 玉ねぎソース",genre:"洋",time:20,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"豚ロース",c:"meat"},{n:"玉ねぎ",c:"veg"}],seas:["醤油","みりん","砂糖","こしょう"],tags:["たんぱく質"]},
+  {id:"mune_mayopon",name:"鶏むねのマヨポン焼き",genre:"洋",time:20,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"鶏むね肉",c:"meat"}],seas:["マヨネーズ","ポン酢","片栗粉"],tags:["たんぱく質"]},
+  {id:"roll_cabbage",name:"ロールキャベツ",genre:"洋",time:40,fresh:true,freezeOK:true,kidMain:true,burners:1,
+    ing:[{n:"合いびき肉",c:"meat"},{n:"キャベツ",c:"veg"},{n:"玉ねぎ",c:"veg"},{n:"卵",c:"egg"}],seas:["コンソメ","ケチャップ","塩","こしょう"],tags:["たんぱく質","野菜"]},
+  {id:"shiromi_tomato",name:"白身魚のトマト煮",genre:"洋",time:25,fresh:true,kidMain:true,burners:1,
+    ing:[{n:"白身魚",c:"fish"},{n:"トマト缶",c:"other"},{n:"玉ねぎ",c:"veg"}],seas:["塩","こしょう","にんにく"],tags:["魚","たんぱく質"]},
+  {id:"napolitan",name:"ナポリタン",genre:"洋",time:25,fresh:false,kidMain:true,burners:2,
+    ing:[{n:"ウインナー",c:"meat"},{n:"玉ねぎ",c:"veg"},{n:"ピーマン",c:"veg"},{n:"スパゲッティ",c:"carb"}],seas:["ケチャップ","コンソメ","こしょう"],tags:["たんぱく質","主食"]},
+  {id:"gratin",name:"マカロニグラタン",genre:"洋",time:35,fresh:false,kidMain:true,burners:2,
+    ing:[{n:"マカロニ",c:"carb"},{n:"鶏もも肉",c:"meat"},{n:"玉ねぎ",c:"veg"},{n:"牛乳",c:"dairy"},{n:"ピザ用チーズ",c:"dairy"}],seas:["小麦粉","コンソメ","塩","こしょう","バター"],tags:["たんぱく質","主食"]},
+  // ---- 追加：中 ----
+  {id:"buta_nasu_miso",name:"豚こまとなすの味噌炒め",genre:"中",time:25,fresh:false,kidMain:false,burners:1,
+    ing:[{n:"豚こま肉",c:"meat"},{n:"なす",c:"veg"},{n:"ピーマン",c:"veg"}],seas:["味噌","醤油","砂糖","ごま油"],tags:["たんぱく質","野菜"]},
+  {id:"tori_chili",name:"鶏もものチリソース(甘口)",genre:"中",time:25,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"鶏もも肉",c:"meat"},{n:"長ねぎ",c:"veg"}],seas:["ケチャップ","酢","砂糖","片栗粉","しょうが"],tags:["たんぱく質"]},
+  {id:"buta_moyashi_mushi",name:"豚バラともやしの中華蒸し",genre:"中",time:20,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"豚バラ肉",c:"meat"},{n:"もやし",c:"veg"},{n:"キャベツ",c:"veg"}],seas:["鶏がらスープ","ごま油","醤油"],tags:["たんぱく質","野菜"]},
+  {id:"mabo_nasu",name:"麻婆なす(甘口)",genre:"中",time:25,fresh:true,freezeOK:true,kidMain:true,burners:1,
+    ing:[{n:"豚ひき肉",c:"meat"},{n:"なす",c:"veg"},{n:"長ねぎ",c:"veg"}],seas:["味噌","醤油","砂糖","片栗粉","しょうが"],tags:["たんぱく質","野菜"]},
+  {id:"mune_broccoli",name:"鶏むねとブロッコリーの中華炒め",genre:"中",time:20,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"鶏むね肉",c:"meat"},{n:"ブロッコリー",c:"veg"}],seas:["鶏がらスープ","醤油","ごま油","片栗粉"],tags:["たんぱく質","野菜"]},
+  {id:"buta_piman",name:"豚こまとピーマンの甘辛炒め",genre:"中",time:20,fresh:false,kidMain:false,burners:1,
+    ing:[{n:"豚こま肉",c:"meat"},{n:"ピーマン",c:"veg"}],seas:["醤油","みりん","砂糖","ごま油"],tags:["たんぱく質","野菜"]},
+  // ---- 追加：韓国 ----
+  {id:"prul_gogi",name:"甘口プルコギ",genre:"韓",time:25,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"牛こま肉",c:"meat"},{n:"玉ねぎ",c:"veg"},{n:"にんじん",c:"veg"},{n:"ピーマン",c:"veg"}],seas:["醤油","砂糖","ごま油","にんにく","すりごま"],tags:["たんぱく質","野菜"]},
+  {id:"cheese_dak",name:"チーズタッカルビ風(甘口)",genre:"韓",time:30,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"鶏もも肉",c:"meat"},{n:"キャベツ",c:"veg"},{n:"玉ねぎ",c:"veg"},{n:"コチュジャン",c:"other"},{n:"ピザ用チーズ",c:"dairy"}],seas:["ケチャップ","砂糖","醤油","にんにく","ごま油"],tags:["たんぱく質"]},
+  {id:"yangnyeom",name:"ヤンニョムチキン風(甘口)",genre:"韓",time:30,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"鶏もも肉",c:"meat"},{n:"コチュジャン",c:"other"}],seas:["ケチャップ","砂糖","醤油","にんにく","片栗粉"],tags:["たんぱく質"]},
+  {id:"japchae",name:"チャプチェ",genre:"韓",time:25,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"豚こま肉",c:"meat"},{n:"春雨",c:"other"},{n:"にんじん",c:"veg"},{n:"ピーマン",c:"veg"},{n:"玉ねぎ",c:"veg"}],seas:["醤油","砂糖","ごま油","にんにく","すりごま"],tags:["たんぱく質","野菜"]},
+  {id:"buta_kimchi",name:"豚キムチ",genre:"韓",time:20,fresh:false,kidMain:false,burners:1,
+    ing:[{n:"豚バラ肉",c:"meat"},{n:"キムチ",c:"other"},{n:"玉ねぎ",c:"veg"},{n:"にら",c:"veg"}],seas:["醤油","ごま油","砂糖"],tags:["たんぱく質","野菜"]},
+  {id:"sundubu",name:"スンドゥブ風 豆腐チゲ",genre:"韓",time:25,fresh:false,kidMain:false,burners:1,
+    ing:[{n:"豆腐",c:"egg"},{n:"豚こま肉",c:"meat"},{n:"キムチ",c:"other"},{n:"コチュジャン",c:"other"},{n:"長ねぎ",c:"veg"}],seas:["鶏がらスープ","ごま油","にんにく"],tags:["たんぱく質","大豆"]},
+];
+
+const SUBS = [
+  // ---- 和 ----
+  {id:"horenso_goma",name:"ほうれん草のごま和え",genre:"和",time:8,fresh:false,burners:1,
+    ing:[{n:"ほうれん草",c:"veg"}],seas:["醤油","砂糖","すりごま"],tags:["野菜","ビタミン"]},
+  {id:"miso_soup",name:"豆腐とわかめの味噌汁",genre:"和",time:10,fresh:false,burners:1,
+    ing:[{n:"豆腐",c:"egg"},{n:"わかめ",c:"other"}],seas:["味噌","だし"],tags:["大豆","汁物"]},
+  {id:"kinpira",name:"きんぴらごぼう",genre:"和",time:15,fresh:false,burners:1,
+    ing:[{n:"ごぼう",c:"veg"},{n:"にんじん",c:"veg"}],seas:["醤油","みりん","砂糖","ごま油"],tags:["食物繊維"]},
+  {id:"tamagoyaki",name:"だし巻き卵",genre:"和",time:12,fresh:false,burners:1,
+    ing:[{n:"卵",c:"egg"}],seas:["だし","醤油","砂糖"],tags:["たんぱく質"]},
+  {id:"hijiki",name:"ひじきの煮物",genre:"和",time:20,fresh:false,burners:1,
+    ing:[{n:"ひじき",c:"other"},{n:"にんじん",c:"veg"},{n:"大豆水煮",c:"egg"}],seas:["醤油","みりん","砂糖","だし"],tags:["食物繊維","ミネラル"]},
+  {id:"daikon_miso",name:"大根とねぎの味噌汁",genre:"和",time:12,fresh:false,burners:1,
+    ing:[{n:"大根",c:"veg"},{n:"長ねぎ",c:"veg"}],seas:["味噌","だし"],tags:["野菜","汁物"]},
+  {id:"kabocha",name:"かぼちゃの煮物",genre:"和",time:20,fresh:false,burners:1,
+    ing:[{n:"かぼちゃ",c:"veg"}],seas:["醤油","みりん","砂糖","だし"],tags:["野菜","ビタミン"]},
+  {id:"hiyayakko",name:"冷奴",genre:"和",time:5,fresh:false,burners:0,
+    ing:[{n:"豆腐",c:"egg"},{n:"長ねぎ",c:"veg"}],seas:["醤油"],tags:["大豆"]},
+  {id:"broccoli",name:"ブロッコリーのおかか和え",genre:"和",time:10,fresh:false,burners:1,
+    ing:[{n:"ブロッコリー",c:"veg"},{n:"かつおぶし",c:"other"}],seas:["醤油"],tags:["野菜","ビタミン"]},
+  {id:"chikuwa_isobe",name:"ちくわの磯辺揚げ",genre:"和",time:15,fresh:false,kidLike:true,burners:1,
+    ing:[{n:"ちくわ",c:"fish"},{n:"青のり",c:"other"}],seas:["小麦粉","塩"],tags:["たんぱく質"]},
+  // ---- 洋 ----
+  {id:"potato_salad",name:"ポテトサラダ",genre:"洋",time:20,fresh:false,burners:1,
+    ing:[{n:"じゃがいも",c:"veg"},{n:"きゅうり",c:"veg"},{n:"にんじん",c:"veg"}],seas:["マヨネーズ","塩","こしょう"],tags:["野菜"]},
+  {id:"cabbage_slaw",name:"キャベツのコールスロー",genre:"洋",time:10,fresh:false,burners:0,
+    ing:[{n:"キャベツ",c:"veg"},{n:"にんじん",c:"veg"},{n:"コーン缶",c:"other"}],seas:["マヨネーズ","酢","砂糖"],tags:["野菜"]},
+  {id:"corn_soup",name:"コーンスープ",genre:"洋",time:10,fresh:false,burners:1,
+    ing:[{n:"コーン缶",c:"other"},{n:"牛乳",c:"dairy"}],seas:["塩","こしょう"],tags:["汁物"]},
+  {id:"tomato_salad",name:"トマトとツナのサラダ",genre:"洋",time:8,fresh:false,burners:0,
+    ing:[{n:"トマト",c:"veg"},{n:"ツナ缶",c:"other"}],seas:["塩","こしょう","酢"],tags:["野菜"]},
+  {id:"fried_potato",name:"フライドポテト",genre:"洋",time:15,fresh:false,kidLike:true,burners:1,
+    ing:[{n:"じゃがいも",c:"veg"}],seas:["塩"],tags:["野菜"]},
+  {id:"consomme",name:"野菜のコンソメスープ",genre:"洋",time:12,fresh:false,burners:1,
+    ing:[{n:"玉ねぎ",c:"veg"},{n:"にんじん",c:"veg"},{n:"コンソメ",c:"other"}],seas:["塩","こしょう"],tags:["野菜","汁物"]},
+  {id:"german_potato",name:"ジャーマンポテト",genre:"洋",time:18,fresh:false,burners:1,
+    ing:[{n:"じゃがいも",c:"veg"},{n:"ウインナー",c:"meat"}],seas:["塩","こしょう","にんにく"],tags:["野菜"]},
+  // ---- 中 ----
+  {id:"namul",name:"もやしとにんじんのナムル",genre:"中",time:10,fresh:false,burners:1,
+    ing:[{n:"もやし",c:"veg"},{n:"にんじん",c:"veg"}],seas:["ごま油","塩","にんにく"],tags:["野菜"]},
+  {id:"chuka_soup",name:"卵とコーンの中華スープ",genre:"中",time:10,fresh:false,burners:1,
+    ing:[{n:"卵",c:"egg"},{n:"コーン缶",c:"other"}],seas:["鶏がらスープ","醤油","ごま油"],tags:["汁物"]},
+  {id:"banbanji",name:"きゅうりとトマトの中華和え",genre:"中",time:10,fresh:false,burners:0,
+    ing:[{n:"きゅうり",c:"veg"},{n:"トマト",c:"veg"}],seas:["ごま油","醤油","酢","砂糖"],tags:["野菜"]},
+  {id:"chuka_corn",name:"チンゲン菜の中華炒め",genre:"中",time:10,fresh:false,burners:1,
+    ing:[{n:"チンゲン菜",c:"veg"}],seas:["鶏がらスープ","ごま油","塩"],tags:["野菜","ビタミン"]},
+  {id:"harusame",name:"春雨の中華サラダ",genre:"中",time:12,fresh:false,burners:1,
+    ing:[{n:"春雨",c:"other"},{n:"きゅうり",c:"veg"},{n:"ハム",c:"meat"}],seas:["醤油","酢","砂糖","ごま油"],tags:["野菜"]},
+  {id:"wakame_chuka",name:"わかめスープ",genre:"中",time:8,fresh:false,burners:1,
+    ing:[{n:"わかめ",c:"other"},{n:"長ねぎ",c:"veg"}],seas:["鶏がらスープ","ごま油"],tags:["汁物"]},
+  // ---- 追加：和 ----
+  {id:"nasu_nibitashi",name:"なすの煮浸し",genre:"和",time:12,fresh:false,burners:1,
+    ing:[{n:"なす",c:"veg"}],seas:["醤油","みりん","だし"],tags:["野菜"]},
+  {id:"komatsuna_abura",name:"小松菜と油揚げの煮浸し",genre:"和",time:12,fresh:false,burners:1,
+    ing:[{n:"小松菜",c:"veg"},{n:"油揚げ",c:"egg"}],seas:["醤油","みりん","だし"],tags:["野菜"]},
+  {id:"horenso_ohitashi",name:"ほうれん草のおひたし",genre:"和",time:8,fresh:false,burners:1,
+    ing:[{n:"ほうれん草",c:"veg"}],seas:["醤油","だし"],tags:["野菜","ビタミン"]},
+  {id:"nameko_miso",name:"なめこと豆腐の味噌汁",genre:"和",time:10,fresh:false,burners:1,
+    ing:[{n:"なめこ",c:"veg"},{n:"豆腐",c:"egg"}],seas:["味噌","だし"],tags:["汁物"]},
+  {id:"cabbage_miso",name:"キャベツと油揚げの味噌汁",genre:"和",time:10,fresh:false,burners:1,
+    ing:[{n:"キャベツ",c:"veg"},{n:"油揚げ",c:"egg"}],seas:["味噌","だし"],tags:["野菜","汁物"]},
+  {id:"kiriboshi",name:"切り干し大根の煮物",genre:"和",time:20,fresh:false,burners:1,
+    ing:[{n:"切り干し大根",c:"other"},{n:"にんじん",c:"veg"}],seas:["醤油","みりん","砂糖","だし"],tags:["食物繊維"]},
+  // ---- 追加：洋 ----
+  {id:"broccoli_egg",name:"ブロッコリーとゆで卵のサラダ",genre:"洋",time:10,fresh:false,burners:1,
+    ing:[{n:"ブロッコリー",c:"veg"},{n:"卵",c:"egg"}],seas:["マヨネーズ","塩","こしょう"],tags:["野菜"]},
+  {id:"minestrone",name:"ミネストローネ",genre:"洋",time:15,fresh:false,burners:1,
+    ing:[{n:"玉ねぎ",c:"veg"},{n:"にんじん",c:"veg"},{n:"トマト缶",c:"other"}],seas:["コンソメ","塩","こしょう","にんにく"],tags:["野菜","汁物"]},
+  {id:"kinoko_butter",name:"きのこのバターソテー",genre:"洋",time:8,fresh:false,burners:1,
+    ing:[{n:"きのこ",c:"veg"}],seas:["バター","醤油","塩","こしょう"],tags:["野菜"]},
+  {id:"carrot_rape",name:"にんじんのラペ",genre:"洋",time:8,fresh:false,burners:0,
+    ing:[{n:"にんじん",c:"veg"}],seas:["酢","砂糖","塩","こしょう"],tags:["野菜"]},
+  // ---- 追加：中 ----
+  {id:"chuka_hiyayakko",name:"中華風冷奴",genre:"中",time:5,fresh:false,burners:0,
+    ing:[{n:"豆腐",c:"egg"},{n:"長ねぎ",c:"veg"}],seas:["ごま油","醤油"],tags:["大豆"]},
+  {id:"horenso_namul",name:"ほうれん草のナムル",genre:"中",time:8,fresh:false,burners:1,
+    ing:[{n:"ほうれん草",c:"veg"}],seas:["ごま油","塩","にんにく","すりごま"],tags:["野菜","ビタミン"]},
+  {id:"kyuri_chuka",name:"きゅうりの中華漬け",genre:"中",time:8,fresh:false,burners:0,
+    ing:[{n:"きゅうり",c:"veg"}],seas:["ごま油","醤油","酢","砂糖"],tags:["野菜"]},
+  {id:"egg_tomato",name:"卵とトマトの中華炒め",genre:"中",time:12,fresh:false,burners:1,
+    ing:[{n:"卵",c:"egg"},{n:"トマト",c:"veg"}],seas:["鶏がらスープ","塩","ごま油"],tags:["たんぱく質","野菜"]},
+  // ---- 追加：韓国 ----
+  {id:"namul_moyashi",name:"豆もやしのナムル",genre:"韓",time:8,fresh:false,burners:1,
+    ing:[{n:"豆もやし",c:"veg"}],seas:["ごま油","塩","にんにく","すりごま"],tags:["野菜"]},
+  {id:"namul_komatsu",name:"小松菜のナムル",genre:"韓",time:8,fresh:false,burners:1,
+    ing:[{n:"小松菜",c:"veg"}],seas:["ごま油","塩","にんにく","すりごま"],tags:["野菜","ビタミン"]},
+  {id:"namul_nasu",name:"なすのナムル",genre:"韓",time:10,fresh:false,burners:1,
+    ing:[{n:"なす",c:"veg"}],seas:["ごま油","醤油","にんにく","すりごま"],tags:["野菜"]},
+  {id:"choregi",name:"チョレギサラダ",genre:"韓",time:8,fresh:false,burners:0,
+    ing:[{n:"レタス",c:"veg"},{n:"きゅうり",c:"veg"}],seas:["ごま油","醤油","酢","砂糖","すりごま","にんにく"],tags:["野菜"]},
+  {id:"kimchi_yakko",name:"キムチ奴",genre:"韓",time:5,fresh:false,burners:0,
+    ing:[{n:"豆腐",c:"egg"},{n:"キムチ",c:"other"}],seas:["ごま油","醤油"],tags:["大豆"]},
+  {id:"wakame_kr",name:"韓国風わかめスープ",genre:"韓",time:8,fresh:false,burners:1,
+    ing:[{n:"わかめ",c:"other"},{n:"長ねぎ",c:"veg"}],seas:["鶏がらスープ","ごま油","にんにく"],tags:["汁物"]},
+  {id:"egg_negi_soup",name:"卵とねぎのスープ",genre:"韓",time:8,fresh:false,burners:1,
+    ing:[{n:"卵",c:"egg"},{n:"長ねぎ",c:"veg"}],seas:["鶏がらスープ","ごま油"],tags:["汁物"]},
+  {id:"oikimchi",name:"きゅうりのオイキムチ風",genre:"韓",time:8,fresh:false,burners:0,
+    ing:[{n:"きゅうり",c:"veg"},{n:"コチュジャン",c:"other"}],seas:["ごま油","酢","砂糖","にんにく"],tags:["野菜"]},
+];
+
+/* ============================================================
+   日曜の昼ごはん（子供向け・一皿もの＋軽い副菜0〜1品）
+   dinner の MAINS/SUBS とは別プール。genre は表示色用。
+   ============================================================ */
+const LUNCH=[
+  {id:"lunch_chahan",name:"チャーハン",genre:"中",time:20,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"ごはん",c:"carb"},{n:"卵",c:"egg"},{n:"ハム",c:"meat"},{n:"長ねぎ",c:"veg"}],seas:["鶏がらスープ","醤油","塩","こしょう","ごま油"],tags:["主食","たんぱく質"]},
+  {id:"lunch_keema",name:"キーマカレー",genre:"洋",time:25,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"合いびき肉",c:"meat"},{n:"玉ねぎ",c:"veg"},{n:"にんじん",c:"veg"},{n:"カレールウ",c:"other"},{n:"ごはん",c:"carb"}],seas:[],tags:["主食","たんぱく質"]},
+  {id:"lunch_yakisoba",name:"ソース焼きそば",genre:"中",time:20,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"焼きそば麺",c:"carb"},{n:"豚こま肉",c:"meat"},{n:"キャベツ",c:"veg"},{n:"にんじん",c:"veg"},{n:"もやし",c:"veg"}],seas:["ソース","醤油","こしょう","青のり"],tags:["主食","野菜"]},
+  {id:"lunch_okonomi",name:"お好み焼き",genre:"和",time:25,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"キャベツ",c:"veg"},{n:"卵",c:"egg"},{n:"豚バラ肉",c:"meat"},{n:"小麦粉",c:"carb"}],seas:["ソース","マヨネーズ","青のり","顆粒だし"],tags:["主食","野菜"]},
+  {id:"lunch_hotdog",name:"ホットドッグ",genre:"洋",time:15,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"ドッグパン",c:"carb"},{n:"ウインナー",c:"meat"},{n:"キャベツ",c:"veg"}],seas:["ケチャップ","マヨネーズ"],tags:["主食"]},
+  {id:"lunch_pizza_toast",name:"ピザトースト",genre:"洋",time:15,fresh:false,kidMain:true,burners:0,
+    ing:[{n:"食パン",c:"carb"},{n:"ピザ用チーズ",c:"dairy"},{n:"ハム",c:"meat"},{n:"ピーマン",c:"veg"},{n:"玉ねぎ",c:"veg"}],seas:["ケチャップ"],tags:["主食"]},
+  {id:"lunch_sandwich",name:"たまごハムサンド",genre:"洋",time:15,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"食パン",c:"carb"},{n:"卵",c:"egg"},{n:"ハム",c:"meat"},{n:"きゅうり",c:"veg"}],seas:["マヨネーズ","塩","こしょう"],tags:["主食"]},
+  {id:"lunch_yakiudon",name:"焼きうどん",genre:"和",time:20,fresh:false,kidMain:true,burners:1,
+    ing:[{n:"うどん",c:"carb"},{n:"豚こま肉",c:"meat"},{n:"キャベツ",c:"veg"},{n:"にんじん",c:"veg"}],seas:["醤油","みりん","顆粒だし","ソース"],tags:["主食","野菜"]},
+  {id:"lunch_omurice",name:"ケチャップオムライス",genre:"洋",time:25,fresh:false,kidMain:true,burners:2,
+    ing:[{n:"卵",c:"egg"},{n:"鶏もも肉",c:"meat"},{n:"玉ねぎ",c:"veg"},{n:"ごはん",c:"carb"}],seas:["ケチャップ","塩","こしょう","バター"],tags:["主食","たんぱく質"]},
+];
+const LUNCH_SIDES=[
+  {id:"lside_salad",name:"ミニサラダ",genre:"洋",time:5,fresh:false,burners:0,
+    ing:[{n:"レタス",c:"veg"},{n:"トマト",c:"veg"},{n:"きゅうり",c:"veg"}],seas:["塩","こしょう","酢"],tags:["野菜"]},
+  {id:"lside_corn",name:"コーンスープ",genre:"洋",time:10,fresh:false,burners:1,
+    ing:[{n:"コーン缶",c:"other"},{n:"牛乳",c:"dairy"}],seas:["塩","こしょう"],tags:["汁物"]},
+  {id:"lside_potato",name:"フライドポテト",genre:"洋",time:15,fresh:false,burners:1,
+    ing:[{n:"じゃがいも",c:"veg"}],seas:["塩"],tags:["野菜"]},
+  {id:"lside_yogurt",name:"フルーツヨーグルト",genre:"洋",time:3,fresh:false,burners:0,
+    ing:[{n:"ヨーグルト",c:"dairy"},{n:"バナナ",c:"other"}],seas:[],tags:["デザート"]},
+];
+
+/* ============================================================
+   子供の好みメニュー（固定登録・参考データ）
+   入力ではなくDB固定。主菜選定時に「系統一致」を加点する。
+   ============================================================ */
+const KID_FAVES=[
+  "フライドポテト","ラーメン","うどん","手巻き寿司","カレー",
+  "チキンステーキ","麻婆豆腐","ステーキ","ちくわの磯辺揚げ","焼肉","焼鮭"
+];
+// 好みの「系統」→ この食材/キーワードを使う主菜を加点
+const KID_FAVE_HINTS=[
+  {key:"カレー",match:m=>/カレー/.test(m.name)},
+  {key:"麻婆",match:m=>/麻婆/.test(m.name)},
+  {key:"焼鮭・鮭",match:m=>/鮭/.test(m.name)},
+  {key:"ステーキ・焼肉(肉メイン)",match:m=>m.ing.some(i=>i.c==="meat")&&!/ひき|つみれ|そぼろ/.test(m.name)},
+  {key:"チキン(鶏肉)",match:m=>m.ing.some(i=>/鶏/.test(i.n))},
+];
+
+/* ---- 設定保持（セッション内メモリ。アーティファクト環境ではブラウザ保存が使えないため） ---- */
+let SETUP_STORE={};
+function loadSetup(){
+  if(SETUP_STORE.seasonings)document.getElementById("seasonings").value=SETUP_STORE.seasonings;
+}
+function saveSetup(){
+  SETUP_STORE.seasonings=document.getElementById("seasonings").value;
+}
+
+/* ---- 登録済み調味料の削除・復元 ---- */
+// 重複表記のペア（代表名を削除したら対の表記も在庫から外す）
+const DUP_GROUP={"こしょう":["こしょう","胡椒"],"サラダ油":["サラダ油","油"],"顆粒だし":["顆粒だし","だし"],"しょうが":["しょうが","生姜"]};
+function getRemovedDefaults(){return new Set(SETUP_STORE.removed||[]);}
+function removeSeasoning(name,isDefault){
+  if(isDefault){
+    const rm=getRemovedDefaults();
+    (DUP_GROUP[name]||[name]).forEach(x=>rm.add(x));
+    SETUP_STORE.removed=[...rm];
+  }else{
+    const t=document.getElementById("seasonings");
+    t.value=parseList(t.value).filter(x=>x!==name).join(", ");
+    saveSetup();
+  }
+  renderPantry();
+}
+function restoreDefaults(){
+  SETUP_STORE.removed=[];
+  renderPantry();
+}
+
+/* ---- 入力補助チップ ---- */
+function buildChips(id,items,targetId){
+  const box=document.getElementById(id);
+  box.innerHTML="";
+  items.forEach(w=>{
+    const c=document.createElement("span");c.className="chip";c.textContent="+ "+w;
+    c.onclick=()=>{const t=document.getElementById(targetId);
+      const cur=t.value.trim();
+      const arr=cur?cur.split(/[,、\s]+/).filter(Boolean):[];
+      if(!arr.includes(w)){arr.push(w);t.value=arr.join(", ");}
+      if(targetId==="seasonings"){saveSetup();if(typeof renderPantry==="function")renderPantry();}
+    };
+    box.appendChild(c);
+  });
+}
+
+/* ---- 文字列 → 配列 ---- */
+function parseList(str){
+  return (str||"").split(/[,、\n\s]+/).map(s=>s.trim()).filter(Boolean);
+}
+function norm(s){return s.replace(/肉$/,"").replace(/[ 　]/g,"");}
+function fridgeHas(fridge,name){
+  const n=norm(name);
+  return fridge.some(f=>{const fn=norm(f);return fn.includes(n)||n.includes(fn);});
+}
+
+/* ---- レシピが冷蔵庫食材をいくつ使うか ---- */
+function useScore(recipe,fridge){
+  let c=0; recipe.ing.forEach(i=>{if(fridgeHas(fridge,i.n))c++;});
+  return c;
+}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+/* ============================================================
+   献立生成
+   ============================================================ */
+const DAYS=[
+  {dow:"火",rest:false,kid:false},
+  {dow:"水",rest:false,kid:false},
+  {dow:"木",rest:true ,kid:false},
+  {dow:"金",rest:false,kid:false},
+  {dow:"土",rest:false,kid:true },
+  {dow:"日(昼)",rest:false,kid:true,lunch:true},
+  {dow:"日",rest:false,kid:true },
+  {dow:"月",rest:true ,kid:false},
+];
+
+/* ============================================================
+   クリップボードコピー
+   ============================================================ */
+let LAST_PLAN=null, LAST_SHOP_NEED={};
+
+/* 献立＋買い物リストをプレーンテキスト化 */
+function buildPlanText(){
+  if(!LAST_PLAN)return "";
+  const L=[];
+  L.push("🍳 週間献立プランナー");
+  L.push("");
+  LAST_PLAN.forEach(d=>{
+    if(d.rest){L.push(`【${d.dow}】お休み（外食・買い置き・残り物など）`);return;}
+    const who=d.kid?"4人(子供向け)":"夫婦2人";
+    L.push(`【${d.dow}】${who}・${d.main.genre}`);
+    L.push(`  主菜：${d.main.name}（${d.main.time}分）`);
+    d.subs.forEach(s=>L.push(`  副菜：${s.name}（${s.time}分）`));
+  });
+  L.push("");
+  L.push("🛒 週末の買い物リスト");
+  const order=["meat","fish","veg","egg","dairy","carb","other"];
+  let any=false;
+  order.forEach(c=>{
+    if(!LAST_SHOP_NEED[c])return;
+    any=true;
+    L.push(`[${CAT[c]}] ${[...LAST_SHOP_NEED[c]].join("、")}`);
+  });
+  if(!any)L.push("買い足し不要（冷蔵庫の食材だけで足ります）");
+  return L.join("\n");
+}
+
+/* クリップボードにコピー（iframe/execCommandフォールバック付き） */
+function copyMenu(btn){
+  const text=buildPlanText();
+  if(!text)return;
+  const orig="📋 クリップボードにコピー";
+  const feedback=ok=>{
+    btn.textContent=ok?"✅ コピーしました":"⚠️ コピーできませんでした";
+    setTimeout(()=>{btn.textContent=orig;},1600);
+  };
+  const legacy=()=>{
+    const ta=document.createElement("textarea");
+    ta.value=text;ta.setAttribute("readonly","");
+    ta.style.position="fixed";ta.style.top="-9999px";ta.style.opacity="0";
+    document.body.appendChild(ta);ta.focus();ta.select();
+    let ok=false;try{ok=document.execCommand("copy");}catch(e){ok=false;}
+    document.body.removeChild(ta);return ok;
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>feedback(true)).catch(()=>feedback(legacy()));
+  }else{
+    feedback(legacy());
+  }
+}
+
+/* ------------------------------------------------------------
+   選定ロジック（週全体の生成・特定日の再抽選で共用）
+   ctx = {fridge, usedMains:Set, usedSubs:Set, oneDishUsed:bool,
+          remain:Set(まだ使っていない冷蔵庫食材), earlyIdx:Set, excludeMain?:id}
+   ------------------------------------------------------------ */
+const EARLY_IDX=new Set([0,1]); // 火・水 = 週前半（生もの優先枠）
+
+/* ---- 提案スタイル：バリエーション⇔冷蔵庫使い切りのバランスを切替 ---- */
+let VARIETY_MODE="balance";
+const VARIETY_PRESETS={
+  variety:{fridge:1.2,fridgeRemain:1.8,genre:3.5,protein:3.5,recent:7,  jitter:2.5,g:0.82,K:16,subFridge:1.5,subJitter:3,subRecent:4},
+  balance:{fridge:2,  fridgeRemain:2.6,genre:2.2,protein:2.2,recent:5,  jitter:1.6,g:0.60,K:12,subFridge:2,  subJitter:2,subRecent:3},
+  fridge: {fridge:3,  fridgeRemain:4,  genre:0.8,protein:0.8,recent:2.5,jitter:0.8,g:0.42,K:9, subFridge:2.5,subJitter:1,subRecent:1.5},
+};
+function setVariety(v){
+  VARIETY_MODE=v;
+  document.querySelectorAll("#varietySeg button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
+  if(LAST_PLAN)generate(); // 既に提案があれば即作り直して反映
+}
+
+/* ---- 直近に出した献立を記憶して再提案の偏りを防ぐ（セッション内） ---- */
+let RECENT_MAINS=[],RECENT_SUBS=[],RECENT_LUNCH=[];
+function pushRecent(arr,ids,cap){
+  ids.forEach(id=>{const i=arr.indexOf(id);if(i>=0)arr.splice(i,1);arr.unshift(id);});
+  if(arr.length>cap)arr.length=cap;
+}
+function recordPlanRecent(plan){
+  const dm=[],ds=[],dl=[];
+  plan.forEach(d=>{if(d.rest)return;
+    if(d.lunch){dl.push(d.main.id);return;}
+    dm.push(d.main.id);d.subs.forEach(s=>ds.push(s.id));
+  });
+  pushRecent(RECENT_MAINS,dm,20);
+  pushRecent(RECENT_SUBS,ds,24);
+  pushRecent(RECENT_LUNCH,dl,5);
+}
+
+// 主菜のたんぱく源を分類（週内で偏らないように）
+function proteinOf(m){
+  const n=m.ing.map(i=>i.n).join("");
+  if(/合いびき|豚ひき|鶏ひき|ひき肉/.test(n))return "ひき";
+  if(/鶏/.test(n))return "鶏";
+  if(/豚/.test(n))return "豚";
+  if(/牛/.test(n))return "牛";
+  if(/鮭|ぶり|さば|さわら|白身魚|たら|えび|カニ|ツナ/.test(n))return "魚";
+  return "他";
+}
+
+// 上位K件から幾何分布(g^順位)で重み付きランダム抽選（argmaxをやめて多様化）
+function weightedPick(items,g,K){
+  const top=items.slice(0,Math.min(K,items.length));
+  if(!top.length)return items[0];
+  let total=0;for(let i=0;i<top.length;i++)total+=Math.pow(g,i);
+  let r=Math.random()*total;
+  for(let i=0;i<top.length;i++){r-=Math.pow(g,i);if(r<=0)return top[i];}
+  return top[top.length-1];
+}
+
+// 子供の好み(KID_FAVES)系統一致で加点
+function kidMatch(r){
+  let s=0; KID_FAVE_HINTS.forEach(h=>{if(h.match(r))s+=2;});
+  return Math.min(s,4);
+}
+
+// 主菜スコア：冷蔵庫＋週内の多様性＋直近履歴＋ゆらぎ（重みは提案スタイルで変化）
+function scoreMain(m,day,ctx){
+  const W=ctx.weights;
+  let s=useScore(m,ctx.fridge)*W.fridge + useScore(m,[...ctx.remain])*W.fridgeRemain;
+  s-=(ctx.genreCount[m.genre]||0)*W.genre;             // 同ジャンルが続くと減点
+  s-=(ctx.proteinCount[proteinOf(m)]||0)*W.protein;    // 同じたんぱく源が続くと減点
+  if(RECENT_MAINS.includes(m.id))s-=W.recent;          // 直近の週で出たものは避ける
+  if(day.kid)s+=kidMatch(m);
+  if(day.kid&&m.kidFave)s+=3;
+  if(day.kid&&m.oneDish)s+=Math.random()<0.5?5:-2;
+  const rawFresh=m.fresh&&!m.freezeOK;
+  if(ctx.earlyIdx.has(day.idx)&&m.fresh)s+=4;
+  if(!ctx.earlyIdx.has(day.idx)&&rawFresh)s-=20;
+  if(!ctx.earlyIdx.has(day.idx)&&m.fresh&&m.freezeOK)s-=1;
+  s+=Math.random()*W.jitter;                           // 微ゆらぎ（同点回避＆多様化）
+  return s;
+}
+
+function pickMain(day,ctx){
+  let pool=MAINS.filter(m=>!ctx.usedMains.has(m.id));
+  if(ctx.excludeMain)pool=pool.filter(m=>m.id!==ctx.excludeMain); // 単日変更時は今の主菜を必ず変える
+  if(!day.kid||ctx.oneDishUsed)pool=pool.filter(m=>!m.oneDish);
+  if(day.kid)pool=pool.filter(m=>m.kidMain);
+  if(!pool.length)pool=MAINS.filter(m=>day.kid?m.kidMain:!m.oneDish); // 枯渇時フォールバック
+  const scored=pool.map(m=>({m,s:scoreMain(m,day,ctx)})).sort((a,b)=>b.s-a.s).map(x=>x.m);
+  return weightedPick(scored,ctx.weights.g,ctx.weights.K);
+}
+
+// 副菜：主菜と同ジャンル。野菜・汁物を補完し2口以内。冷蔵庫＋ゆらぎ＋直近履歴で多様化。
+function pickSubs(day,main,n,ctx){
+  const W=ctx.weights;
+  const sameGenre=s=>s.genre===main.genre;
+  let pool=SUBS.filter(s=>!ctx.usedSubs.has(s.id)&&sameGenre(s));
+  const wantSoup=Math.random()<0.6;
+  const scored=pool.map(s=>{
+    let sc=(useScore(s,ctx.fridge)+useScore(s,[...ctx.remain]))*W.subFridge;
+    if(s.tags.includes("野菜"))sc+=2;
+    if(wantSoup&&s.tags.includes("汁物"))sc+=2;
+    if(day.kid&&s.kidLike)sc+=3;
+    if(RECENT_SUBS.includes(s.id))sc-=W.subRecent;      // 直近で出た副菜は避ける
+    if(main.burners+s.burners>2)sc-=6;
+    if(s.ing.some(i=>main.ing.some(mi=>norm(mi.n)===norm(i.n))))sc-=3;
+    sc+=Math.random()*W.subJitter;
+    return {s,sc};
+  }).sort((a,b)=>b.sc-a.sc);
+  const out=[];let burners=main.burners;
+  for(const{s}of scored){
+    if(out.length>=n)break;
+    if(burners+s.burners>2)continue;
+    out.push(s);burners+=s.burners;
+  }
+  if(out.length===0&&n>=1){
+    let fb=SUBS.find(s=>sameGenre(s)&&!ctx.usedSubs.has(s.id)&&main.burners+s.burners<=2);
+    if(!fb)fb=SUBS.find(s=>sameGenre(s)&&main.burners+s.burners<=2);
+    if(!fb)fb=SUBS.find(s=>sameGenre(s)&&s.burners===0);
+    if(fb)out.push(fb);
+  }
+  return out;
+}
+
+// 選んだ料理が使った冷蔵庫食材を remain から除く（次の日は残りを優先＝週で使い切る）
+function consumeRemain(ctx,dishes){
+  dishes.forEach(dish=>dish.ing.forEach(i=>{
+    [...ctx.remain].forEach(f=>{if(fridgeHas([f],i.n))ctx.remain.delete(f);});
+  }));
+}
+
+// 1日分を組む（週全体・単日再抽選で共用）
+function buildDay(day,ctx){
+  const main=pickMain(day,ctx);
+  ctx.usedMains.add(main.id);
+  ctx.genreCount[main.genre]=(ctx.genreCount[main.genre]||0)+1;   // 週内多様性の集計
+  const pr=proteinOf(main);ctx.proteinCount[pr]=(ctx.proteinCount[pr]||0)+1;
+  if(main.oneDish)ctx.oneDishUsed=true;
+  // 一品完結なら副菜は軽く0〜1品、それ以外は重い主菜で1品/軽い主菜で2品
+  const subN=main.oneDish?(Math.random()<0.5?1:0):((main.time>=35)?1:2);
+  const subs=pickSubs(day,main,subN,ctx);
+  subs.forEach(s=>ctx.usedSubs.add(s.id));
+  consumeRemain(ctx,[main,...subs]);
+  return {main,subs};
+}
+
+// 日曜の昼ごはん（子供向け・一皿もの＋軽い副菜0〜1品）
+function buildLunch(day,ctx){
+  const W=ctx.weights;
+  let pool=LUNCH.slice();
+  if(ctx.excludeMain)pool=pool.filter(m=>m.id!==ctx.excludeMain); // 単日変更時は必ず変える
+  if(!pool.length)pool=LUNCH.slice();
+  const scored=pool.map(m=>{
+    let s=useScore(m,ctx.fridge)*W.fridge+useScore(m,[...ctx.remain])*W.fridgeRemain;
+    if(RECENT_LUNCH.includes(m.id))s-=W.recent;         // 直近の昼は避ける
+    s+=Math.random()*W.jitter;
+    return {m,s};
+  }).sort((a,b)=>b.s-a.s).map(x=>x.m);
+  const main=weightedPick(scored,W.g,W.K);
+  ctx.genreCount[main.genre]=(ctx.genreCount[main.genre]||0)+1;
+  const pr=proteinOf(main);ctx.proteinCount[pr]=(ctx.proteinCount[pr]||0)+1;
+  consumeRemain(ctx,[main]);
+  let subs=[];
+  if(Math.random()<0.6){ // 6割の確率で軽い副菜を1品つける
+    const side=shuffle(LUNCH_SIDES).map(s=>({s,sc:(useScore(s,ctx.fridge)+useScore(s,[...ctx.remain]))*2+Math.random()*3}))
+      .sort((a,b)=>b.sc-a.sc)[0].s;
+    if(main.burners+side.burners<=2){subs=[side];consumeRemain(ctx,subs);}
+  }
+  return {main,subs};
+}
+
+function newCtx(fridge,extra){
+  return Object.assign({fridge,usedMains:new Set(),usedSubs:new Set(),
+    oneDishUsed:false,remain:new Set(fridge),earlyIdx:EARLY_IDX,
+    genreCount:{},proteinCount:{},
+    weights:VARIETY_PRESETS[VARIETY_MODE]||VARIETY_PRESETS.balance},extra||{});
+}
+
+function generate(){
+  saveSetup();
+  const fridge=parseList(document.getElementById("fridge").value);
+  const ctx=newCtx(fridge);
+  const plan=DAYS.map((d,i)=>{
+    if(d.rest)return {...d};
+    const day={...d,idx:i};
+    const {main,subs}=d.lunch?buildLunch(day,ctx):buildDay(day,ctx);
+    return {...d,main,subs};
+  });
+  LAST_PLAN=plan;
+  recordPlanRecent(plan);   // 次回以降の偏り防止のため記録
+  renderMenu(plan);
+  renderShop(plan,fridge);
+  document.getElementById("out").style.display="block";
+  document.getElementById("out").scrollIntoView({behavior:"smooth"});
+}
+
+// 特定の日だけ組み直す（他の日は固定・その日の主菜は必ず変わる・残り食材を優先）
+function regenDay(idx){
+  if(!LAST_PLAN)return;
+  const base=DAYS[idx];
+  if(!base||base.rest)return;
+  const fridge=parseList(document.getElementById("fridge").value);
+  const ctx=newCtx(fridge,{excludeMain:LAST_PLAN[idx].main.id});
+  // 他の日で使用中の主菜・副菜・一品完結・冷蔵庫消費・ジャンル/たんぱく源を集計
+  LAST_PLAN.forEach((d,i)=>{
+    if(i===idx||d.rest)return;
+    ctx.usedMains.add(d.main.id);
+    if(d.main.oneDish)ctx.oneDishUsed=true;
+    ctx.genreCount[d.main.genre]=(ctx.genreCount[d.main.genre]||0)+1;
+    const pr=proteinOf(d.main);ctx.proteinCount[pr]=(ctx.proteinCount[pr]||0)+1;
+    d.subs.forEach(s=>ctx.usedSubs.add(s.id));
+    consumeRemain(ctx,[d.main,...d.subs]);
+  });
+  const day={...base,idx};
+  const {main,subs}=base.lunch?buildLunch(day,ctx):buildDay(day,ctx);
+  LAST_PLAN[idx]={...base,main,subs};
+  recordPlanRecent([{...base,main,subs}]); // 変更した日も履歴に反映
+  renderMenu(LAST_PLAN);
+  renderShop(LAST_PLAN,fridge);
+}
+
+/* ---- 献立描画 ---- */
+function renderMenu(plan){
+  const fridge=parseList(document.getElementById("fridge").value);
+  let html="";
+  plan.forEach((d,idx)=>{
+    if(d.rest){
+      html+=`<div class="day rest"><div class="day-h"><span class="dow">${d.dow}</span>
+        <span class="who">お休み</span></div>
+        <div class="rest-note">調理はお休みの日です 🍵（外食・買い置き・残り物などで）</div></div>`;
+      return;
+    }
+    const total=d.main.time+Math.max(...d.subs.map(s=>0),0)+d.subs.reduce((a,s)=>a+Math.round(s.time*0.4),0);
+    const dishesHtml=[d.main,...d.subs].map((dish,i)=>{
+      const role=i===0?"主菜":"副菜";
+      const roleCls=i===0?"":"sub";
+      const tags=dish.tags.map(t=>`<span class="tag">${t}</span>`).join("");
+      const fresh=dish.fresh?`<span class="tag fresh">早めに消費</span>`:"";
+      const one=dish.oneDish?`<span class="tag" style="background:#fbeee4;color:#c8762f">一品完結</span>`:"";
+      const uses=dish.ing.filter(x=>fridgeHas(fridge,x.n)).map(x=>x.n);
+      const useTag=uses.length?`<span class="tag use">冷蔵庫:${uses.join("・")}</span>`:"";
+      return `<div class="dish"><span class="role ${roleCls}">${role}</span>
+        <a class="name" href="https://www.google.com/search?q=${encodeURIComponent(dish.name)}" target="_blank" rel="noopener noreferrer">${dish.name}</a>
+        <div class="meta">${one}${fresh}${useTag}${tags}<span class="tag">${dish.time}分</span></div></div>`;
+    }).join("");
+    const gColor={"和":"#4a8c6f","洋":"#c8762f","中":"#b5504a","韓":"#c0398b"}[d.main.genre]||"#888";
+    html+=`<div class="day"><div class="day-h">
+      <span class="dow">${d.dow}</span>
+      <span class="who ${d.kid?'kid':''}">${d.kid?'👨‍👩‍👧‍👦 4人(子供向け)':'👫 夫婦2人'}</span>
+      ${d.lunch?'<span class="who" style="color:#c88a2f;border-color:#e6c48a;background:#fbf3e2">🍙 昼ごはん</span>':''}
+      <span class="who" style="color:${gColor};border-color:${gColor}33">${d.main.genre}</span>
+      <span class="time">⏱ 約${total}分</span>
+      <button class="day-reroll" onclick="regenDay(${idx})">🔄 この日を変更</button></div>
+      <div class="dishes">${dishesHtml}</div></div>`;
+  });
+  document.getElementById("menu").innerHTML=html;
+}
+
+/* ---- 登録済み調味料（基本+ユーザー追加）を1つの配列で返す ---- */
+function getUserSeasonings(){
+  return parseList(document.getElementById("seasonings").value);
+}
+function isStockedSeasoning(name){
+  if(getRemovedDefaults().has(name))return false;   // ユーザーが削除した基本調味料は在庫外
+  if(PANTRY.includes(name))return true;
+  return getUserSeasonings().some(u=>norm(u)===norm(name)||norm(name).includes(norm(u)));
+}
+
+/* ---- 買い物リスト描画 ---- */
+function renderShop(plan,fridge){
+  const need={};   // cat -> Set(names)
+  const have=[];
+  plan.forEach(d=>{
+    if(d.rest)return;
+    [d.main,...d.subs].forEach(dish=>{
+      dish.ing.forEach(i=>{
+        if(fridgeHas(fridge,i.n)){if(!have.includes(i.n))have.push(i.n);return;}
+        if(isStockedSeasoning(i.n))return;   // 基本+ユーザー登録の調味料は在庫扱い
+        (need[i.c]=need[i.c]||new Set()).add(i.n);
+      });
+    });
+  });
+  const order=["meat","fish","veg","egg","dairy","carb","other"];
+  let html="";
+  order.forEach(c=>{
+    if(!need[c])return;
+    html+=`<div class="shop-cat">${CAT[c]}</div>`;
+    [...need[c]].forEach(n=>{
+      html+=`<label class="shop-item"><input type="checkbox">${n}</label>`;
+    });
+  });
+  document.getElementById("shop").innerHTML=html||`<div style="color:var(--sub);font-size:13px">買い足し不要！冷蔵庫の食材だけで足りています 🎉</div>`;
+
+  // 冷蔵庫の使い切り状況：入力した食材のうち、どれを使い/どれが余ったか
+  const usedFridge=new Set();
+  plan.forEach(d=>{if(d.rest)return;[d.main,...d.subs].forEach(dish=>dish.ing.forEach(i=>{
+    fridge.forEach(f=>{if(fridgeHas([f],i.n))usedFridge.add(f);});
+  }));});
+  const leftover=fridge.filter(f=>!usedFridge.has(f));
+  let note = usedFridge.size?`✅ 冷蔵庫から使う食材：${[...usedFridge].join("、")}`:"";
+  if(leftover.length) note += `${note?"<br>":""}🔸 今回使い切れなかった食材：${leftover.join("、")}`;
+  document.getElementById("haveNote").innerHTML=note;
+  LAST_SHOP_NEED=need;
+}
+
+/* ---- 登録済み調味料パネルの描画 ---- */
+function renderPantry(){
+  const box=document.getElementById("pantryView");
+  // 基本調味料：重複表記(胡椒/こしょう, 油/サラダ油, だし/顆粒だし, 生姜/しょうが)は代表名だけ表示
+  const hideDup=new Set(["胡椒","油","だし","生姜"]);
+  const removed=getRemovedDefaults();
+  const base=PANTRY.filter(p=>!hideDup.has(p)&&!removed.has(p));
+  const user=getUserSeasonings().filter(u=>!PANTRY.includes(u));
+  let html=base.map(p=>`<span class="pt">${p}<button class="pt-x" title="削除" onclick="removeSeasoning('${p}',true)">×</button></span>`).join("");
+  html+=user.map(u=>`<span class="pt user">${u}<button class="pt-x" title="削除" onclick="removeSeasoning('${u}',false)">×</button></span>`).join("");
+  box.innerHTML=html||'<span style="color:var(--sub);font-size:12px">調味料がありません（下の入力欄から追加できます）</span>';
+  const removedBase=[...removed].filter(r=>!hideDup.has(r)); // 代表名のみ数える
+  const note=document.getElementById("pantryNote");
+  if(note)note.innerHTML=removedBase.length
+    ? `<a onclick="restoreDefaults()" style="cursor:pointer;color:var(--accent-d);text-decoration:underline">削除した基本調味料（${removedBase.length}件）を元に戻す</a>`
+    : "";
+}
+
+/* ---- 初期化 ---- */
+buildChips("seasonChips",["オイスターソース","カレー粉","バルサミコ酢","ナンプラー","白だし"],"seasonings");
+buildChips("fridgeChips",["鶏もも肉","鶏むね肉","豚こま肉","合いびき肉","鮭","卵","豆腐","ほうれん草","キャベツ","玉ねぎ","にんじん","じゃがいも","トマト","大根"],"fridge");
+loadSetup();
+renderPantry();
+// ユーザー追加調味料を入力したらパネルを即時更新
+document.getElementById("seasonings").addEventListener("input",renderPantry);
+</script>
+</body>
+</html>
