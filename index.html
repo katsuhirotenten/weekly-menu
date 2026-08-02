@@ -125,7 +125,7 @@
 <div class="wrap">
   <header>
     <h1>🍳 週間献立プランナー</h1>
-    <p>週末まとめ買い前提。月・木はお休み、土日は子供向け（日曜は昼も子供向け）。冷蔵庫の食材を優先して使い切ります。</p>
+    <p>週末まとめ買い前提。月・木はお休み、土日は子供向け（日曜は昼も子供向け）。冷蔵庫の食材は必ず使い切ります。</p>
   </header>
 
   <!-- 入力（初回1回） -->
@@ -148,7 +148,7 @@
   <!-- 入力（毎週） -->
   <div class="card">
     <h2>今週の冷蔵庫の食材 <span class="badge">毎週入力</span></h2>
-    <p class="hint">ある食材をカンマ区切りで。これを優先的に使い切る献立を組みます。生もの・足の早いものは週の前半（火・水）に回します。</p>
+    <p class="hint">ある食材をカンマ区切りで。<b>ここに入れた食材は必ず全部使い切る</b>ように献立を組みます（下のコンディションより優先）。生もの・足の早いものは週の前半（火・水）に回します。</p>
     <textarea id="fridge" rows="2" placeholder="例：鶏むね肉, 豚こま, 鮭, ほうれん草, キャベツ, 玉ねぎ, にんじん, 卵, 豆腐, きのこ, トマト"></textarea>
     <div class="chips" id="fridgeChips"></div>
 
@@ -189,7 +189,8 @@
         <li>主菜1＋副菜1〜2。全工程おおむね1時間以内・コンロ2口で完結。</li>
         <li>生もの・足の早いもの（魚・ひき肉など）は火・水に優先配置。</li>
         <li>特殊な調味料は使わず、カツ系は除外。</li>
-        <li>冷蔵庫にある食材を週全体でできるだけ使い切るよう配分し、不足分のみ買い物リスト化。使い残しは買い物リスト下に表示。</li>
+        <li><b>冷蔵庫の食材を使い切るのは必須条件。</b>下の全条件（気温・体調・予算・忙しさ）より優先し、献立を組んだあとに使い残しがあれば副菜の追加・差し替え、必要なら主菜の差し替えで自動補正する。それでも置けない食材は理由付きで表示。</li>
+        <li>不足分のみ買い物リスト化。</li>
         <li>買い物リストの各食材には、紐づく献立（曜日＋料理名）を表示。</li>
         <li>主菜はジャンル・たんぱく源・直近履歴の重複を強く避け、毎回バリエーションが出るように選定。</li>
         <li>気温：暑い→さっぱり／冷たい系、寒い→鍋・煮込み系を優先。「標準」のときは暦（今の季節）から平年の体感を推定して寄せる。</li>
@@ -604,6 +605,33 @@ const SUBS = [
     ing:[{n:"ピーマン",c:"veg"},{n:"ツナ缶",c:"other"}],seas:["鶏がらスープ","ごま油","こしょう"],tags:["野菜"]},
   {id:"hakusai_tuna",name:"白菜とツナのサラダ",genre:"洋",time:8,fresh:false,burners:0,
     ing:[{n:"白菜",c:"veg"},{n:"ツナ缶",c:"other"}],seas:["マヨネーズ","酢","塩","こしょう"],tags:["野菜"]},
+  // ---- 追加：複数の野菜をまとめて使える副菜（コンロ1口で何品分も消化できる＝使い切り用） ----
+  {id:"chikuzenni",name:"筑前煮",genre:"和",time:30,fresh:false,burners:1,
+    ing:[{n:"鶏もも肉",c:"meat"},{n:"れんこん",c:"veg"},{n:"里芋",c:"veg"},{n:"にんじん",c:"veg"},{n:"ごぼう",c:"veg"}],seas:["醤油","みりん","砂糖","だし"],tags:["野菜","食物繊維"]},
+  {id:"konsai_kinpira",name:"根菜のきんぴら",genre:"和",time:15,fresh:false,burners:1,
+    ing:[{n:"れんこん",c:"veg"},{n:"ごぼう",c:"veg"},{n:"にんじん",c:"veg"}],seas:["醤油","みりん","砂糖","ごま油"],tags:["食物繊維"]},
+  {id:"natsuyasai_agebitashi",name:"夏野菜の揚げ浸し",genre:"和",time:20,fresh:false,burners:1,
+    ing:[{n:"なす",c:"veg"},{n:"ピーマン",c:"veg"},{n:"かぼちゃ",c:"veg"},{n:"オクラ",c:"veg"}],seas:["醤油","みりん","だし","酢"],tags:["野菜"]},
+  {id:"gu_miso",name:"具だくさん味噌汁",genre:"和",time:15,fresh:false,burners:1,
+    ing:[{n:"大根",c:"veg"},{n:"にんじん",c:"veg"},{n:"小松菜",c:"veg"},{n:"わかめ",c:"other"},{n:"油揚げ",c:"egg"}],seas:["味噌","だし"],tags:["野菜","汁物"]},
+  {id:"mushiyasai_goma",name:"蒸し野菜のごまだれ",genre:"和",time:15,fresh:false,burners:1,
+    ing:[{n:"キャベツ",c:"veg"},{n:"かぼちゃ",c:"veg"},{n:"ブロッコリー",c:"veg"},{n:"とうもろこし",c:"veg"}],seas:["醤油","酢","砂糖","すりごま","ごま油"],tags:["野菜"]},
+  {id:"onyasai_salad",name:"温野菜サラダ",genre:"洋",time:12,fresh:false,burners:1,
+    ing:[{n:"ブロッコリー",c:"veg"},{n:"にんじん",c:"veg"},{n:"かぼちゃ",c:"veg"},{n:"とうもろこし",c:"veg"}],seas:["マヨネーズ","塩","こしょう"],tags:["野菜"]},
+  {id:"kinoko_komatsuna",name:"きのこと小松菜のバター炒め",genre:"洋",time:10,fresh:false,burners:1,
+    ing:[{n:"きのこ",c:"veg"},{n:"小松菜",c:"veg"},{n:"とうもろこし",c:"veg"}],seas:["バター","醤油","塩","こしょう"],tags:["野菜"]},
+  {id:"yasai_stick",name:"野菜スティック",genre:"洋",time:5,fresh:false,kidLike:true,burners:0,
+    ing:[{n:"きゅうり",c:"veg"},{n:"にんじん",c:"veg"},{n:"大根",c:"veg"}],seas:["マヨネーズ","味噌"],tags:["野菜"]},
+  {id:"harusame_wakame",name:"わかめと春雨の中華スープ",genre:"中",time:12,fresh:false,burners:1,
+    ing:[{n:"わかめ",c:"other"},{n:"春雨",c:"other"},{n:"長ねぎ",c:"veg"},{n:"卵",c:"egg"}],seas:["鶏がらスープ","醤油","ごま油"],tags:["汁物"]},
+  {id:"renkon_amazu",name:"れんこんの甘酢炒め",genre:"中",time:15,fresh:false,burners:1,
+    ing:[{n:"れんこん",c:"veg"},{n:"ピーマン",c:"veg"},{n:"にんじん",c:"veg"}],seas:["醤油","酢","砂糖","ごま油"],tags:["野菜","食物繊維"]},
+  {id:"okra_chuka",name:"オクラとトマトの中華和え",genre:"中",time:8,fresh:false,burners:1,
+    ing:[{n:"オクラ",c:"veg"},{n:"トマト",c:"veg"}],seas:["ごま油","醤油","酢","すりごま"],tags:["野菜"]},
+  {id:"namul_moriawase",name:"ナムル盛り合わせ",genre:"韓",time:12,fresh:false,burners:1,
+    ing:[{n:"小松菜",c:"veg"},{n:"もやし",c:"veg"},{n:"にんじん",c:"veg"}],seas:["ごま油","塩","にんにく","すりごま"],tags:["野菜"]},
+  {id:"kabocha_namul",name:"かぼちゃとオクラのナムル",genre:"韓",time:12,fresh:false,burners:1,
+    ing:[{n:"かぼちゃ",c:"veg"},{n:"オクラ",c:"veg"}],seas:["ごま油","塩","にんにく","すりごま"],tags:["野菜"]},
 ];
 
 /* ============================================================
@@ -703,6 +731,9 @@ const ATTR={
   daikon_soboro:"wg",kabocha_potage:"wg",hakusai_cream:"wg",toridango_soup:"wg",
   hiyashi_tomato:"ce",edamame:"ce",okra_ohitashi:"cg",zucchini_marine:"c",kyuri_tataki:"ce",
   moyashi_okaka:"e",cabbage_shiokombu:"ce",chikuwa_kyuri:"ce",mugen_piman:"e",hakusai_tuna:"ce",
+  chikuzenni:"wf",konsai_kinpira:"w",natsuyasai_agebitashi:"c",gu_miso:"wg",mushiyasai_goma:"wg",
+  onyasai_salad:"g",kinoko_komatsuna:"",yasai_stick:"ce",harusame_wakame:"wg",
+  renkon_amazu:"",okra_chuka:"cg",namul_moriawase:"c",kabocha_namul:"c",
   // --- 昼ごはん ---
   lunch_chahan:"e",lunch_keema:"s",lunch_okonomi:"f",lunch_hotdog:"e",lunch_pizza_toast:"e",
   lunch_sandwich:"ce",lunch_yakiudon:"e",lunch_somen:"ce",lunch_hiyashi_chuka:"c",
@@ -843,6 +874,42 @@ function useScore(recipe,fridge){
   let c=0; recipe.ing.forEach(i=>{if(fridgeHas(fridge,i.n))c++;});
   return c;
 }
+/* ---- その料理が特定の冷蔵庫食材を使うか ---- */
+function dishUses(dish,f){return dish.ing.some(i=>fridgeHas([f],i.n));}
+/* ---- まだ使っていない冷蔵庫食材をどれだけ消化できるか（希少な食材ほど高く評価） ----
+   coverCount[f] = その食材を使えるレシピが全部で何品あるか。数が少ない食材を後回しにすると
+   置き場所が無くなるので、先に消化されるよう重み付けする。 */
+function coverGain(r,ctx){
+  let g=0;
+  ctx.remain.forEach(f=>{
+    if(dishUses(r,f))g+=0.35+0.65/Math.sqrt(Math.max(1,ctx.coverCount[f]||1));
+  });
+  return g;
+}
+/* 残り食材 ÷ 残りスロット。1を超えると「1品で2つ以上消化しないと間に合わない」状態 */
+function urgencyOf(ctx){
+  return ctx.remain.size?ctx.remain.size/Math.max(1,ctx.slotsLeft):0;
+}
+function buildCoverCount(fridge){
+  const c={};
+  fridge.forEach(f=>{c[f]=0;});
+  [...MAINS,...SUBS,...LUNCH,...LUNCH_SIDES].forEach(r=>fridge.forEach(f=>{if(dishUses(r,f))c[f]++;}));
+  return c;
+}
+/* 「生もの料理でしかカバーできない食材」＝ 週前半(火・水)で消化しないと
+   使い切りと鮮度の両立ができない食材（魚介類など）。早い日で優先的に押さえる。 */
+function buildFreshOnly(fridge){
+  const all=[...MAINS,...SUBS,...LUNCH,...LUNCH_SIDES],s=new Set();
+  fridge.forEach(f=>{
+    const cov=all.filter(r=>dishUses(r,f));
+    if(cov.length&&cov.every(r=>r.fresh&&!r.freezeOK))s.add(f);
+  });
+  return s;
+}
+/* 献立DBにその食材を使うレシピが1つでもあるか（＝原理的に使い切れるか） */
+function hasAnyRecipeFor(f){
+  return [...MAINS,...SUBS,...LUNCH,...LUNCH_SIDES].some(r=>dishUses(r,f));
+}
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
 /* ============================================================
@@ -862,7 +929,7 @@ const DAYS=[
 /* ============================================================
    クリップボードコピー
    ============================================================ */
-let LAST_PLAN=null, LAST_SHOP_NEED={};
+let LAST_PLAN=null, LAST_SHOP_NEED={}, LAST_LEFTOVER=[];
 
 /* 献立＋買い物リストをプレーンテキスト化 */
 function buildPlanText(){
@@ -928,8 +995,8 @@ function copyMenu(btn){
 const EARLY_IDX=new Set([0,1]); // 火・水 = 週前半（生もの優先枠）
 
 /* ---- 選定の重み：バリエーション重視で固定（提案スタイルの切替は廃止） ---- */
-const WEIGHTS={fridge:1.2,fridgeRemain:1.8,genre:3.5,protein:3.5,recent:7,jitter:2.5,
-  g:0.82,K:16,subFridge:1.5,subJitter:3,subRecent:4};
+const WEIGHTS={fridge:1.2,cover:6,genre:3.5,protein:3.5,recent:7,jitter:2.5,
+  g:0.82,K:16,subFridge:1.5,subCover:5,subJitter:3,subRecent:4};
 
 /* ============================================================
    今週のコンディション（気温／体調／予算／忙しさ）
@@ -1074,7 +1141,9 @@ function kidMatch(r){
 // 主菜スコア：冷蔵庫＋週内の多様性＋直近履歴＋ゆらぎ（重みは提案スタイルで変化）
 function scoreMain(m,day,ctx){
   const W=ctx.weights;
-  let s=useScore(m,ctx.fridge)*W.fridge + useScore(m,[...ctx.remain])*W.fridgeRemain;
+  // 冷蔵庫の使い切りは必須条件。残りが多い／スロットが少ないほど重みが跳ね上がり、他の条件を上回る
+  let s=useScore(m,ctx.fridge)*W.fridge
+       +coverGain(m,ctx)*W.cover*(1+urgencyOf(ctx)*1.5);
   s-=(ctx.genreCount[m.genre]||0)*W.genre;             // 同ジャンルが続くと減点
   s-=(ctx.proteinCount[proteinOf(m)]||0)*W.protein;    // 同じたんぱく源が続くと減点
   if(RECENT_MAINS.includes(m.id))s-=W.recent;          // 直近の週で出たものは避ける
@@ -1083,8 +1152,9 @@ function scoreMain(m,day,ctx){
   if(day.kid&&m.oneDish)s+=Math.random()<0.5?5:-2;
   const rawFresh=m.fresh&&!m.freezeOK;
   if(ctx.earlyIdx.has(day.idx)&&m.fresh)s+=4;
-  if(!ctx.earlyIdx.has(day.idx)&&rawFresh)s-=20;
+  if(!ctx.earlyIdx.has(day.idx)&&rawFresh)s-=30;
   if(!ctx.earlyIdx.has(day.idx)&&m.fresh&&m.freezeOK)s-=1;
+  if(urgencyOf(ctx)>1)s+=(2-m.burners)*2;              // 使い切りが厳しい週は副菜の口を空けられる主菜を優先
   s+=condScore(m,ctx);                                 // 気温・体調・予算・忙しさ
   s+=Math.random()*W.jitter;                           // 微ゆらぎ（同点回避＆多様化）
   return s;
@@ -1104,6 +1174,28 @@ function pickMain(day,ctx){
   if(!allowOne||ctx.oneDishCount>=(OPTS.busy==="busy"?2:1))pool=pool.filter(m=>!m.oneDish);
   if(day.kid)pool=pool.filter(m=>m.kidMain);
   if(!pool.length)pool=MAINS.filter(m=>day.kid?m.kidMain:!m.oneDish); // 枯渇時フォールバック
+  // 週後半に生もの（冷凍できない魚介など）は出さない。ただしそれを外すと
+  // 冷蔵庫を消化できる候補が無くなる場合だけ、使い切りを優先して残す。
+  if(!ctx.earlyIdx.has(day.idx)){
+    const noFresh=pool.filter(m=>!(m.fresh&&!m.freezeOK));
+    if(noFresh.length&&(!ctx.remain.size
+        ||noFresh.some(m=>coverGain(m,ctx)>0)||!pool.some(m=>coverGain(m,ctx)>0)))
+      pool=noFresh;
+  }
+  // 週前半（火・水）は、生もの料理でしか消化できない食材（魚介など）を最優先で押さえる。
+  // ここで確保しないと「使い切り」と「生ものは前半」が両立できなくなる。
+  if(ctx.earlyIdx.has(day.idx)){
+    const urgent=[...ctx.remain].filter(f=>ctx.freshOnly.has(f));
+    if(urgent.length){
+      const cov=pool.filter(m=>urgent.some(f=>dishUses(m,f)));
+      if(cov.length)pool=cov;
+    }
+  }
+  // 残り食材が残りスロット数以上なら、冷蔵庫を消化できる主菜だけに絞る（使い切りは必須条件）
+  if(ctx.remain.size>=ctx.slotsLeft){
+    const cov=pool.filter(m=>coverGain(m,ctx)>0);
+    if(cov.length)pool=cov;
+  }
   const scored=pool.map(m=>({m,s:scoreMain(m,day,ctx)})).sort((a,b)=>b.s-a.s).map(x=>x.m);
   return weightedPick(scored,ctx.weights.g,ctx.weights.K);
 }
@@ -1113,15 +1205,22 @@ function pickSubs(day,main,n,ctx){
   const W=ctx.weights;
   const sameGenre=s=>s.genre===main.genre;
   let pool=SUBS.filter(s=>!ctx.usedSubs.has(s.id)&&sameGenre(s));
+  // 残り食材が多いときは、冷蔵庫を消化できる副菜を優先候補にする
+  if(ctx.remain.size>=ctx.slotsLeft){
+    const cov=pool.filter(s=>coverGain(s,ctx)>0);
+    if(cov.length)pool=cov;
+  }
   const wantSoup=Math.random()<0.6;
   const scored=pool.map(s=>{
-    let sc=(useScore(s,ctx.fridge)+useScore(s,[...ctx.remain]))*W.subFridge;
+    let sc=useScore(s,ctx.fridge)*W.subFridge
+          +coverGain(s,ctx)*W.subCover*(1+urgencyOf(ctx)*1.5);
     if(s.tags.includes("野菜"))sc+=2;
     if(wantSoup&&s.tags.includes("汁物"))sc+=2;
     if(day.kid&&s.kidLike)sc+=3;
     if(RECENT_SUBS.includes(s.id))sc-=W.subRecent;      // 直近で出た副菜は避ける
     if(main.burners+s.burners>2)sc-=6;
     if(s.ing.some(i=>main.ing.some(mi=>norm(mi.n)===norm(i.n))))sc-=3;
+    if(urgencyOf(ctx)>1&&s.burners===0)sc+=3;           // 使い切りが厳しい週は火を使わない副菜で口を空ける
     sc+=condScoreSub(s,ctx);                            // 気温・体調・予算・忙しさ
     sc+=Math.random()*W.subJitter;
     return {s,sc};
@@ -1158,6 +1257,7 @@ function buildDay(day,ctx){
   const subs=pickSubs(day,main,subCount(main),ctx);
   subs.forEach(s=>ctx.usedSubs.add(s.id));
   consumeRemain(ctx,[main,...subs]);
+  ctx.slotsLeft--;
   return {main,subs};
 }
 
@@ -1167,8 +1267,12 @@ function buildLunch(day,ctx){
   let pool=LUNCH.filter(m=>!nameClash(m.name,ctx.usedNames));    // 夕食と同じ料理は出さない
   if(ctx.excludeMain)pool=pool.filter(m=>m.id!==ctx.excludeMain); // 単日変更時は必ず変える
   if(!pool.length)pool=LUNCH.slice();
+  if(ctx.remain.size>=ctx.slotsLeft){                   // 昼も冷蔵庫の消化を優先
+    const cov=pool.filter(m=>coverGain(m,ctx)>0);
+    if(cov.length)pool=cov;
+  }
   const scored=pool.map(m=>{
-    let s=useScore(m,ctx.fridge)*W.fridge+useScore(m,[...ctx.remain])*W.fridgeRemain;
+    let s=useScore(m,ctx.fridge)*W.fridge+coverGain(m,ctx)*W.cover*(1+urgencyOf(ctx)*1.5);
     if(RECENT_LUNCH.includes(m.id))s-=W.recent;         // 直近の昼は避ける
     s+=condScore(m,ctx);                                // 気温・体調・予算・忙しさ
     s+=Math.random()*W.jitter;
@@ -1180,24 +1284,170 @@ function buildLunch(day,ctx){
   const pr=proteinOf(main);ctx.proteinCount[pr]=(ctx.proteinCount[pr]||0)+1;
   consumeRemain(ctx,[main]);
   let subs=[];
-  if(OPTS.busy!=="busy"&&Math.random()<0.6){ // 6割の確率で軽い副菜を1品つける（忙しい週は無し）
-    const side=shuffle(LUNCH_SIDES).map(s=>({s,sc:(useScore(s,ctx.fridge)+useScore(s,[...ctx.remain]))*2
+  // 冷蔵庫がまだ残っているなら必ず1品つける（忙しくても使い切りを優先）
+  const mustCover=ctx.remain.size>=ctx.slotsLeft;
+  if(mustCover||(OPTS.busy!=="busy"&&Math.random()<0.6)){
+    const side=shuffle(LUNCH_SIDES).map(s=>({s,sc:useScore(s,ctx.fridge)*2
+      +coverGain(s,ctx)*W.subCover*(1+urgencyOf(ctx)*1.5)
       +condScoreSub(s,ctx)+Math.random()*3})).sort((a,b)=>b.sc-a.sc)[0].s;
     if(main.burners+side.burners<=2){subs=[side];consumeRemain(ctx,subs);}
   }
+  ctx.slotsLeft--;
   return {main,subs};
+}
+
+/* ============================================================
+   冷蔵庫の使い切り：修復パス（必須条件の担保）
+
+   スコアリングだけでは条件（気温・体調・予算・忙しさ）の加点に押し負けて
+   食材が余ることがあるため、生成後に必ずこのパスを通す。
+   「副菜を足す → 副菜を差し替える → 主菜を差し替える」の順で、
+   カバーできる食材が"純増"する手だけを採用する（＝必ず収束する）。
+   コンロ2口・子供の日・生ものは週前半・ジャンル整合 の制約はすべて維持する。
+   ============================================================ */
+function usedFridgeSet(plan,fridge){
+  const used=new Set();
+  plan.forEach(d=>{if(d.rest)return;[d.main,...d.subs].forEach(dish=>
+    fridge.forEach(f=>{if(dishUses(dish,f))used.add(f);}));});
+  return used;
+}
+/* 各食材を、いまプラン内の何品がカバーしているか */
+function coverCountInPlan(plan,fridge){
+  const c={};fridge.forEach(f=>{c[f]=0;});
+  plan.forEach(d=>{if(d.rest)return;[d.main,...d.subs].forEach(dish=>
+    fridge.forEach(f=>{if(dishUses(dish,f))c[f]++;}));});
+  return c;
+}
+/* その日の献立を oldDishes → newDishes に入れ替えたときの「カバー食材数」の増減 */
+function dayCoverDelta(cnt,fridge,oldDishes,newDishes){
+  let d=0;
+  fridge.forEach(f=>{
+    const o=oldDishes.some(x=>dishUses(x,f)),i=newDishes.some(x=>dishUses(x,f));
+    if(i&&!o&&cnt[f]===0)d++;        // 誰もカバーしていなかった食材を新たにカバー
+    else if(o&&!i&&cnt[f]===1)d--;   // 唯一のカバーを失う
+  });
+  return d;
+}
+/* 主菜を差し替えた日の副菜を組み直す（ジャンル整合・コンロ2口・未カバー食材優先） */
+function rebuildSubsFor(day,main,n,usedSubIds,uncovered){
+  const pool=(day.lunch?LUNCH_SIDES:SUBS)
+    .filter(s=>(day.lunch||s.genre===main.genre)&&!usedSubIds.has(s.id));
+  // 火を使わない副菜を優先すると、同じ日にもう1品入れられて使い切りやすくなる
+  const scored=pool.map(s=>({s,
+    sc:uncovered.filter(f=>dishUses(s,f)).length*10+(s.burners===0?3:0)+(s.tags.includes("野菜")?2:0)}))
+    .sort((a,b)=>b.sc-a.sc);
+  const out=[];let burn=main.burners;
+  for(const{s}of scored){
+    if(out.length>=n)break;
+    if(burn+s.burners>2)continue;
+    out.push(s);burn+=s.burners;
+  }
+  return out;
+}
+/* 純増する手を1つだけ適用する。適用できなければ false。
+   rank が小さいほど「元の献立への影響が小さい」手。同じ増分なら影響の小さい方を採る。 */
+function applyBestFridgeMove(plan,fridge,allowCrossGenre,allowLateFresh){
+  const cnt=coverCountInPlan(plan,fridge);
+  const usedSubIds=new Set(),usedMainIds=new Set(),usedNames=new Set();
+  plan.forEach(d=>{if(d.rest)return;
+    usedMainIds.add(d.main.id);usedNames.add(d.main.name);d.subs.forEach(s=>usedSubIds.add(s.id));});
+  const uncovered=fridge.filter(f=>cnt[f]===0);
+  let best=null;
+  const consider=(gain,rank,apply)=>{
+    if(gain<=0)return;
+    if(!best||gain>best.gain||(gain===best.gain&&rank<best.rank))best={gain,rank,apply};
+  };
+  plan.forEach((d,i)=>{
+    if(d.rest)return;
+    const old=[d.main,...d.subs];
+    const subPool=d.lunch?LUNCH_SIDES:SUBS;
+    const mainPool=d.lunch?LUNCH:MAINS;
+    const burnUsed=d.main.burners+d.subs.reduce((a,s)=>a+s.burners,0);
+    const maxSubs=d.lunch?1:2;
+    // ① 副菜を追加（いちばん影響が小さいので最優先）
+    if(d.subs.length<maxSubs)subPool.forEach(s=>{
+      if(usedSubIds.has(s.id))return;
+      if(!d.lunch&&s.genre!==d.main.genre)return;
+      if(burnUsed+s.burners>2)return;
+      consider(dayCoverDelta(cnt,fridge,old,[...old,s]),0,()=>{d.subs.push(s);});
+    });
+    // ② 既存の副菜を差し替え
+    d.subs.forEach((cur,k)=>{
+      const burnOther=burnUsed-cur.burners;
+      subPool.forEach(s=>{
+        if(s.id===cur.id||usedSubIds.has(s.id))return;
+        if(!d.lunch&&s.genre!==d.main.genre)return;
+        if(burnOther+s.burners>2)return;
+        const next=old.map(x=>x===cur?s:x);
+        consider(dayCoverDelta(cnt,fridge,old,next),1,()=>{d.subs[k]=s;});
+      });
+    });
+    // ③ コンロが埋まっていて足せない日：既存の副菜を「火を使わない副菜」に替えて口を空け、
+    //    空いた口でもう1品足す（1手ずつでは得にならないので2手セットで評価する）
+    if(d.subs.length<maxSubs&&burnUsed>=2)d.subs.forEach((cur,k)=>{
+      if(cur.burners===0)return;
+      subPool.forEach(s0=>{
+        if(s0.burners!==0||s0.id===cur.id||usedSubIds.has(s0.id))return;
+        if(!d.lunch&&s0.genre!==d.main.genre)return;
+        subPool.forEach(s1=>{
+          if(s1.id===cur.id||s1.id===s0.id||usedSubIds.has(s1.id))return;
+          if(!d.lunch&&s1.genre!==d.main.genre)return;
+          if(burnUsed-cur.burners+s1.burners>2)return;
+          const next=[...old.map(x=>x===cur?s0:x),s1];
+          consider(dayCoverDelta(cnt,fridge,old,next),1,()=>{d.subs[k]=s0;d.subs.push(s1);});
+        });
+      });
+    });
+    // ④ 主菜を差し替え。まず同ジャンル（副菜そのまま）、次に別ジャンル（副菜を組み直す）
+    const burnSubs=burnUsed-d.main.burners;
+    const others=new Set([...usedNames].filter(n=>n!==d.main.name));
+    mainPool.forEach(m=>{
+      if(m.id===d.main.id||usedMainIds.has(m.id))return;
+      if(nameClash(m.name,others))return;
+      if(d.kid&&!m.kidMain)return;
+      if(!d.lunch&&!d.kid&&m.oneDish)return;   // 平日に一品完結は出さない
+      const lateFresh=!d.lunch&&!EARLY_IDX.has(i)&&m.fresh&&!m.freezeOK; // 生ものを週後半に置く手は最後の手段
+      // 生ものを後半に置くのは「その主菜自体が余っている食材を消化する」ときだけ。
+      // 副菜を入れる枠を作りたいだけで生ものを持ってこない（例：刺身を金曜に置く）
+      if(lateFresh&&(!allowLateFresh||!uncovered.some(f=>dishUses(m,f))))return;
+      if(m.genre===d.main.genre){
+        if(m.burners+burnSubs>2)return;
+        consider(dayCoverDelta(cnt,fridge,old,[m,...d.subs]),2,()=>{d.main=m;});
+      }else if(allowCrossGenre){
+        // ジャンルが変わるので副菜も組み直す。未カバー食材を拾える副菜を優先し、枠は上限まで使う
+        const subs=rebuildSubsFor(d,m,maxSubs,usedSubIds,uncovered);
+        consider(dayCoverDelta(cnt,fridge,old,[m,...subs]),3,()=>{d.main=m;d.subs=subs;});
+      }
+    });
+  });
+  if(!best)return false;
+  best.apply();
+  return true;
+}
+/* 使い切りを担保する。戻り値は「どうしても置けなかった食材」 */
+function repairFridge(plan,fridge){
+  if(!fridge.length)return [];
+  for(let guard=0;guard<fridge.length+5;guard++){
+    if(usedFridgeSet(plan,fridge).size>=fridge.length)break;
+    // 影響の小さい手から順に試す：同ジャンル → 別ジャンル → 最後の手段（生ものを週後半へ）
+    if(!applyBestFridgeMove(plan,fridge,false,false)
+     &&!applyBestFridgeMove(plan,fridge,true,false)
+     &&!applyBestFridgeMove(plan,fridge,true,true))break;
+  }
+  const used=usedFridgeSet(plan,fridge);
+  return fridge.filter(f=>!used.has(f));
 }
 
 function newCtx(fridge,extra){
   return Object.assign({fridge,usedMains:new Set(),usedSubs:new Set(),usedNames:new Set(),
     oneDishCount:0,remain:new Set(fridge),earlyIdx:EARLY_IDX,
     genreCount:{},proteinCount:{},season:computeSeason(),
+    coverCount:buildCoverCount(fridge),freshOnly:buildFreshOnly(fridge),
+    slotsLeft:DAYS.filter(d=>!d.rest).length,
     weights:WEIGHTS},extra||{});
 }
 
-function generate(){
-  saveSetup();
-  const fridge=parseList(document.getElementById("fridge").value);
+function buildPlanOnce(fridge){
   const ctx=newCtx(fridge);
   const plan=DAYS.map((d,i)=>{
     if(d.rest)return {...d};
@@ -1205,6 +1455,21 @@ function generate(){
     const {main,subs}=d.lunch?buildLunch(day,ctx):buildDay(day,ctx);
     return {...d,main,subs};
   });
+  return {plan,leftover:repairFridge(plan,fridge)}; // 使い切りは必須条件：足りなければ献立を補正
+}
+
+function generate(){
+  saveSetup();
+  const fridge=parseList(document.getElementById("fridge").value);
+  // 使い切れなかったら組み直して、いちばん使い切れた案を採用する（使い切れた時点で即確定）
+  let best=null;
+  for(let attempt=0;attempt<6;attempt++){
+    const r=buildPlanOnce(fridge);
+    if(!best||r.leftover.length<best.leftover.length)best=r;
+    if(!best.leftover.length)break;
+  }
+  const plan=best.plan;
+  LAST_LEFTOVER=best.leftover;
   LAST_PLAN=plan;
   recordPlanRecent(plan);   // 次回以降の偏り防止のため記録
   renderCondBar();
@@ -1220,21 +1485,32 @@ function regenDay(idx){
   const base=DAYS[idx];
   if(!base||base.rest)return;
   const fridge=parseList(document.getElementById("fridge").value);
-  const ctx=newCtx(fridge,{excludeMain:LAST_PLAN[idx].main.id});
-  // 他の日で使用中の主菜・副菜・一品完結・冷蔵庫消費・ジャンル/たんぱく源を集計
-  LAST_PLAN.forEach((d,i)=>{
-    if(i===idx||d.rest)return;
-    ctx.usedMains.add(d.main.id);ctx.usedNames.add(d.main.name);
-    if(d.main.oneDish)ctx.oneDishCount++;
-    ctx.genreCount[d.main.genre]=(ctx.genreCount[d.main.genre]||0)+1;
-    const pr=proteinOf(d.main);ctx.proteinCount[pr]=(ctx.proteinCount[pr]||0)+1;
-    d.subs.forEach(s=>ctx.usedSubs.add(s.id));
-    consumeRemain(ctx,[d.main,...d.subs]);
-  });
-  const day={...base,idx};
-  const {main,subs}=base.lunch?buildLunch(day,ctx):buildDay(day,ctx);
-  LAST_PLAN[idx]={...base,main,subs};
-  recordPlanRecent([{...base,main,subs}]); // 変更した日も履歴に反映
+  const snapshot=LAST_PLAN.map(d=>d.rest?{...d}:{...d,subs:[...d.subs]});
+  let best=null;
+  for(let attempt=0;attempt<6;attempt++){
+    const plan=snapshot.map(d=>d.rest?{...d}:{...d,subs:[...d.subs]});
+    const ctx=newCtx(fridge,{excludeMain:snapshot[idx].main.id});
+    // 他の日で使用中の主菜・副菜・一品完結・冷蔵庫消費・ジャンル/たんぱく源を集計
+    plan.forEach((d,i)=>{
+      if(i===idx||d.rest)return;
+      ctx.usedMains.add(d.main.id);ctx.usedNames.add(d.main.name);
+      if(d.main.oneDish)ctx.oneDishCount++;
+      ctx.genreCount[d.main.genre]=(ctx.genreCount[d.main.genre]||0)+1;
+      const pr=proteinOf(d.main);ctx.proteinCount[pr]=(ctx.proteinCount[pr]||0)+1;
+      d.subs.forEach(s=>ctx.usedSubs.add(s.id));
+      consumeRemain(ctx,[d.main,...d.subs]);
+    });
+    ctx.slotsLeft=1;   // 残りは この日だけ ＝ 余っている食材はここで消化しきる必要がある
+    const day={...base,idx};
+    const {main,subs}=base.lunch?buildLunch(day,ctx):buildDay(day,ctx);
+    plan[idx]={...base,main,subs};
+    const leftover=repairFridge(plan,fridge); // 1日だけで吸収できなければ他の日の副菜で補正
+    if(!best||leftover.length<best.leftover.length)best={plan,leftover};
+    if(!best.leftover.length)break;
+  }
+  LAST_PLAN=best.plan;
+  LAST_LEFTOVER=best.leftover;
+  recordPlanRecent([LAST_PLAN[idx]]); // 変更した日も履歴に反映
   renderMenu(LAST_PLAN);
   renderShop(LAST_PLAN,fridge);
 }
@@ -1349,8 +1625,18 @@ function renderShop(plan,fridge){
     fridge.forEach(f=>{if(fridgeHas([f],i.n))usedFridge.add(f);});
   }));});
   const leftover=fridge.filter(f=>!usedFridge.has(f));
-  let note = usedFridge.size?`✅ 冷蔵庫から使う食材：${[...usedFridge].join("、")}`:"";
-  if(leftover.length) note += `${note?"<br>":""}🔸 今回使い切れなかった食材：${leftover.join("、")}`;
+  let note = usedFridge.size
+    ? (leftover.length
+        ? `✅ 冷蔵庫から使う食材：${[...usedFridge].join("、")}`
+        : `✅ 冷蔵庫の食材はすべて使い切ります：${[...usedFridge].join("、")}`)
+    : "";
+  if(leftover.length){
+    // 使い切りは必須条件なので、残った場合は理由を明示する
+    const noRecipe=leftover.filter(f=>!hasAnyRecipeFor(f));
+    const noSlot=leftover.filter(f=>hasAnyRecipeFor(f));
+    if(noRecipe.length)note+=`${note?"<br>":""}⚠️ ${noRecipe.join("、")}：この食材を使うレシピが献立に収録されていないため、使い切れませんでした。`;
+    if(noSlot.length)note+=`${note?"<br>":""}⚠️ ${noSlot.join("、")}：曜日・コンロ・子供向けなどの制約に合う枠が無く、今回は置けませんでした（「🔄 別の案を出す」で解消することがあります）。`;
+  }
   document.getElementById("haveNote").innerHTML=note;
   LAST_SHOP_NEED=need;
 }
